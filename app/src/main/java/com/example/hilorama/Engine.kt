@@ -46,9 +46,10 @@ fun MainMenu(){
 }
 
 fun polarToCartesian(rho: Float, angle: Float): Offset{
-    val x = rho * cos(angle)
-    val y = rho * sin(angle)
-    return Offset(x, y)
+    val rad = angle * Math.PI / 180
+    val x = rho * cos(rad)
+    val y = rho * sin(rad)
+    return Offset(x.toFloat(), y.toFloat())
 }
 
 fun getNails(radius: Float, count: Int): MutableFloatList {
@@ -81,28 +82,26 @@ fun Core(){
         val height = size.height
         val center = Offset(width / 2f, height / 2f)
 
-        drawCircle(
-            center = center,
-            color = Color.Black,
-            radius = 8f
-        )
-
         nails.addAll(
-            getNails(100f, 10)
+            getNails(width / 2f - 20f, 180)
         )
 
-        println(nails)
+        var i = 0
 
-        for (i in 0 until nails.size - 1){
+        while (i < nails.size){
             val x = nails[i] + center.x
             val y = nails[i + 1] + center.y
 
             drawCircle(
                 center = Offset(x, y),
                 color = Color.Black,
-                radius = 4f
+                radius = 2f
             )
+
+            i += 2
         }
+
+
     }
 }
 
