@@ -3,8 +3,8 @@
 
 static HiloramaMain engine;
 
-extern "C" JNIEXPORT jint JNICALL
-Java_com_example_hilorama_HiloramaEngine_sumita(
+extern "C" [[maybe_unused]] JNIEXPORT jint JNICALL
+Java_com_example_hilorama_HiloramaEngine_drawImage (
         JNIEnv* env, jobject thiz, jint a, jint b){
-    return engine.sumita(a, b);
+
 }

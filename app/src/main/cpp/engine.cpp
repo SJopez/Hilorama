@@ -3,6 +3,6 @@
 
 using namespace  std;
 
-int HiloramaMain::sumita(int a, int b) {
-    return a + b;
+void HiloramaMain::drawImage(float *pixels, float *nails) {
+
 }

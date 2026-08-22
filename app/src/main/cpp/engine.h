@@ -2,5 +2,5 @@
 
 class HiloramaMain {
 public:
-    int sumita(int a, int b);
+    void drawImage(float* pixels, float* nails);
 };
