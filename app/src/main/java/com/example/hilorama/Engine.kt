@@ -42,7 +42,7 @@ object HiloramaEngine {
     init {
         System.loadLibrary("Hilorama")
     }
-    external fun sumita(a: Int, b: Int): Int
+    external fun drawImage(image: FloatArray, nails: FloatArray);
 }
 
 @Composable
@@ -64,9 +64,9 @@ fun polarToCartesian(rho: Float, angle: Float): Offset{
     return Offset(x.toFloat(), y.toFloat())
 }
 
-fun getNails(radius: Float, count: Int): MutableFloatList {
+fun getNails(radius: Float, count: Int): FloatArray {
     val angle = (360 / count).toFloat()
-    val ans = mutableFloatListOf()
+    val ans = mutableListOf<Float>()
     var currAngle = 0f
 
     for (i in 0 until count){
@@ -76,7 +76,7 @@ fun getNails(radius: Float, count: Int): MutableFloatList {
         currAngle += angle
     }
 
-    return ans
+    return ans.toFloatArray()
 }
 
 fun imageToGray(bitmap: Bitmap): FloatArray {
@@ -103,7 +103,6 @@ fun imageToGray(bitmap: Bitmap): FloatArray {
 fun Core(){
     val screenWidth = LocalConfiguration.current.screenWidthDp
     val context = LocalContext.current
-    val nails by remember { mutableStateOf(mutableFloatListOf()) }
     val bitmap by remember { mutableStateOf(
         BitmapFactory.decodeResource(context.resources, R.drawable.perl)
     ) }
@@ -111,17 +110,12 @@ fun Core(){
     Canvas(
         modifier = Modifier
             .border(width = 2.dp, color = Color.Black)
-            .background(color = Color(245, 245, 220))
             .size(screenWidth.dp - 20.dp)
             .clipToBounds()
     ) {
         val width = size.width
         val height = size.height
         val center = Offset(width / 2f, height / 2f)
-
-        nails.addAll(
-            getNails(width / 2f - 20f, 180)
-        )
 
         val image = bitmap.asImageBitmap()
 
@@ -132,10 +126,13 @@ fun Core(){
 
         val scaledWidth = image.width * scale
         val scaledHeight = image.height * scale
+        val grayImage = imageToGray(bitmap)
+        val nails = getNails(width / 2f - 20f, 180)
+
+        HiloramaEngine.drawImage(grayImage, nails)
+
 
         /*
-        val grayImage = imageToGray(bitmap).asImageBitmap()
-
         drawImage(
             image = grayImage,
             dstOffset = IntOffset(0, 0),

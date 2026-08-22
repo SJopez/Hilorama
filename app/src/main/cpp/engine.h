@@ -2,5 +2,5 @@
 
 class HiloramaMain {
 public:
-    void drawImage(float* pixels, float* nails);
+    void drawImage(float* image, int imageLen, float* nails, int nailsLen);
 };
