@@ -306,11 +306,11 @@ fun Core() {
         nailsToDraw.clear()
         lastReset = System.currentTimeMillis()
     }
-    fun assignBitmap(bitmapToAssign: Bitmap){
+    fun assignBitmap(bitmapToAssign: Bitmap, replay: Boolean = true){
         bitmap = bitmapToAssign
-        toDrawBitmap = bitmapToGray(bitmap)
+        toDrawBitmap = if (colorMode <= 1) bitmapToGray(bitmap) else bitmap
         needToCut = false
-        replay()
+        if (replay) replay()
     }
 
     val progress = nailsToDraw.size.toFloat() / realThreadCount
@@ -322,9 +322,17 @@ fun Core() {
         Box(modifier = Modifier.fillMaxSize()) {
             if (needToCut) {
                 bitmap?.let {
-                    ImageCutter(bitmap, (screenWidth - 32).dp, {
-                        assignBitmap(it)
-                    })
+                    ImageCutter(
+                        bitmap,
+                        (screenWidth - 32).dp,
+                        assignBitmap = {
+                           assignBitmap(it)
+                        },
+                        onCancel = {
+                            needToCut = false
+                            bitmap = croppedBitmap
+                        }
+                    )
                 }
             }
             Column(
@@ -491,7 +499,7 @@ fun Core() {
                         }
 
                         clipPath(circleRightHalf) {
-                            drawImage(image = bitmap.asImageBitmap())
+                            drawImage(image = toDrawBitmap.asImageBitmap())
                         }
 
                         var i = 0
@@ -610,9 +618,12 @@ fun Core() {
                     colorMode = colorMode,
                     onColorModeChange = { channel ->
                         pauseCall()
+                        if (channel > 1 && colorMode <= 1) toDrawBitmap = bitmap
+                        else if (channel <= 1 && colorMode > 1) toDrawBitmap = bitmapToGray(bitmap)
                         colorMode = channel
                         nailCount = controls[colorMode].nailCount
                         threadCount = controls[colorMode].threadCount
+
                         replay()
                     },
                     active = !isGenerating,

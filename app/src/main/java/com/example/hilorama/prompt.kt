@@ -211,17 +211,17 @@ fun AiPromptDialog(
                                                 BitmapFactory.decodeStream(body.byteStream())
                                             }
                                         }
-                                        if (cancel()){
+                                        if (!cancel()){
                                             loadBitmap(bitmap)
                                         }
                                     } catch (e: IOException) {
-                                        if (!cancel()) return@launch
+                                        if (cancel()) return@launch
                                         launchPlaceholder(false)
                                         Toast.makeText(context, "❌ Connection Failed", Toast.LENGTH_SHORT).show()
                                     } catch (e: HttpException) {
-                                        if (!cancel()) return@launch
+                                        if (cancel()) return@launch
                                         launchPlaceholder(false)
-                                        Toast.makeText(context, "❌ Out of credits, try again later", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, "❌ Try again later", Toast.LENGTH_SHORT).show()
                                     }
                                 }
                                 onDismissRequest()

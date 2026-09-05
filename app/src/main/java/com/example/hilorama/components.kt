@@ -44,6 +44,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
@@ -130,13 +131,21 @@ fun BarIcon(
 }
 
 @Composable
-fun MainButton(onclick: () -> Unit, modifier: Modifier = Modifier, text: String, icon: Boolean = false, iconSrc: Int = 0){
+fun MainButton(
+    onclick: () -> Unit,
+    modifier: Modifier = Modifier,
+    text: String,
+    icon: Boolean = false,
+    iconSrc: Int = 0,
+    containerColor: Color = SoftPrimary,
+    contentColor: Color = Color.White
+) {
     Button(
         onClick = onclick,
         shape = RoundedCornerShape(24.dp),
         colors = ButtonDefaults.buttonColors(
-            containerColor = SoftPrimary,
-            contentColor = Color.White
+            containerColor = containerColor,
+            contentColor = contentColor
         ),
         elevation = ButtonDefaults.buttonElevation(
             defaultElevation = 4.dp,
@@ -147,12 +156,12 @@ fun MainButton(onclick: () -> Unit, modifier: Modifier = Modifier, text: String,
             .zIndex(2f)
             .padding(bottom = 16.dp),
     ) {
-        if (icon){
+        if (icon) {
             Icon(
                 painter = painterResource(iconSrc),
                 contentDescription = null,
                 modifier = Modifier.size(20.dp),
-                tint = Color.White
+                tint = contentColor
             )
             Spacer(modifier = Modifier.width(8.dp))
         }
@@ -166,7 +175,12 @@ fun MainButton(onclick: () -> Unit, modifier: Modifier = Modifier, text: String,
 }
 
 @Composable
-fun ImageCutter(bitmap: Bitmap, sizeDp: Dp, assignBitmap: (Bitmap) -> Unit) {
+fun ImageCutter(
+    bitmap: Bitmap,
+    sizeDp: Dp,
+    onCancel: () -> Unit = {},
+    assignBitmap: (Bitmap) -> Unit
+) {
     val direction = remember { bitmap.width <= bitmap.height }
     var offsetX by remember { mutableStateOf(-1f) }
     var offsetY by remember { mutableStateOf(-1f) }
@@ -226,12 +240,10 @@ fun ImageCutter(bitmap: Bitmap, sizeDp: Dp, assignBitmap: (Bitmap) -> Unit) {
                     Box(
                         modifier = Modifier
                             .size(sizeDp)
-                            .background(color = Color.White)
                             .zIndex(1f)
                     ) {
                         Canvas(
-                            modifier = Modifier
-                                .fillMaxSize(),
+                            modifier = Modifier.fillMaxSize(),
                         ) {
                             val width = size.width.toInt()
                             val height = size.height.toInt()
@@ -366,22 +378,40 @@ fun ImageCutter(bitmap: Bitmap, sizeDp: Dp, assignBitmap: (Bitmap) -> Unit) {
                         .zIndex(2f),
                     contentAlignment = Alignment.Center
                 ) {}
-                MainButton(
-                    onclick = {
-                        val side = min(croppedWidth, croppedHeight)
-                        val ans = Bitmap.createBitmap(cropped, offsetX.toInt(), offsetY.toInt(), side, side)
-                        assignBitmap(ans)
-                    },
-                    modifier = Modifier.align(Alignment.BottomCenter),
-                    text = "Confirm",
-                    icon = true,
-                    iconSrc = R.drawable.check
-                )
+
+                Row(
+                    modifier = Modifier
+                        .align(Alignment.BottomCenter)
+                        .padding(horizontal = 20.dp, vertical = 24.dp)
+                        .zIndex(3f),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Box(modifier = Modifier.weight(1f)) {
+                        MainButton(
+                            onclick = { onCancel() },
+                            modifier = Modifier.fillMaxWidth(),
+                            text = "Cancel",
+                            containerColor = SoftBackground,
+                            contentColor = TextPrimary
+                        )
+                    }
+
+                    MainButton(
+                        onclick = {
+                            val side = min(croppedWidth, croppedHeight)
+                            val ans = Bitmap.createBitmap(cropped, offsetX.toInt(), offsetY.toInt(), side, side)
+                            assignBitmap(ans)
+                        },
+                        text = "Confirm",
+                        icon = true,
+                        iconSrc = R.drawable.check
+                    )
+                }
             }
         }
     }
 }
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MySlider(
