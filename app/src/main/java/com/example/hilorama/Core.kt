@@ -114,6 +114,7 @@ object HiloramaEngine {
 data class Thread(val nail1: Int, val nail2: Int, val color: Int)
 data class ControlStatus(val nailCount: Int, val threadCount: Int)
 
+
 @Composable
 fun Core() {
     val screenWidth = LocalConfiguration.current.screenWidthDp
@@ -185,6 +186,7 @@ fun Core() {
 
     val backgroundColor = if (colorMode % 2 == 1) AndroidColor.BLACK else AndroidColor.WHITE
     val composeBackgroundColor = if (colorMode % 2 == 1) Color.Black else Color.White
+    var startFromReset by remember { mutableStateOf(true) }
 
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -225,7 +227,7 @@ fun Core() {
             redrawTrigger++
 
             nails = getNails(width / 2 - 20f, 20, nailCount)
-            lastPlay = System.currentTimeMillis()
+            if (startFromReset) lastPlay = System.currentTimeMillis()
         }
     }
 
@@ -237,7 +239,7 @@ fun Core() {
         val curr = generation.incrementAndGet()
 
         fun paintThread(nail1: Int, nail2: Int, color: Int) {
-            if (curr != generation.get() || 2 * maxOf(nail1, nail2) + 1 >= nails.size) return
+            if (curr != generation.get() || ((2 * maxOf(nail1, nail2) + 1) >= nails.size)) return
 
             val x0 = nails[2 * nail1]
             val y0 = nails[2 * nail1 + 1]
@@ -300,15 +302,17 @@ fun Core() {
         lastPlay = System.currentTimeMillis()
     }
 
-    fun replay() {
+    fun replay(start: Boolean = true) {
         if (isPlaying) pauseCall()
         HiloramaEngine.reset()
         nailsToDraw.clear()
+        startFromReset = start
         lastReset = System.currentTimeMillis()
     }
     fun assignBitmap(bitmapToAssign: Bitmap, replay: Boolean = true){
         bitmap = bitmapToAssign
         toDrawBitmap = if (colorMode <= 1) bitmapToGray(bitmap) else bitmap
+        toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
         needToCut = false
         if (replay) replay()
     }
@@ -606,24 +610,24 @@ fun Core() {
                         pauseCall()
                         nailCount = nails
                         controls[colorMode] = ControlStatus(nailCount, threadCount)
-                        replay()
+                        replay(false)
                     },
                     threadCount = threadCount,
                     onThreadCountChange = { threads ->
                         pauseCall()
                         threadCount = threads
                         controls[colorMode] = ControlStatus(nailCount, threadCount)
-                        replay()
+                        replay(false)
                     },
                     colorMode = colorMode,
                     onColorModeChange = { channel ->
                         pauseCall()
                         if (channel > 1 && colorMode <= 1) toDrawBitmap = bitmap
                         else if (channel <= 1 && colorMode > 1) toDrawBitmap = bitmapToGray(bitmap)
+                        toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
                         colorMode = channel
                         nailCount = controls[colorMode].nailCount
                         threadCount = controls[colorMode].threadCount
-
                         replay()
                     },
                     active = !isGenerating,
@@ -693,7 +697,7 @@ fun Core() {
             if (isGeneratingVideo){
                 ExportProgressDialog(
                     progressVideo,
-                    {
+                    onDismissRequest = {
                         isGeneratingVideo = false
                     }
                 )

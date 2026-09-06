@@ -11,6 +11,9 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.runtime.*
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -60,6 +63,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.graphics.Color
@@ -76,6 +80,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -173,7 +178,6 @@ fun MainButton(
         )
     }
 }
-
 @Composable
 fun ImageCutter(
     bitmap: Bitmap,
@@ -181,12 +185,17 @@ fun ImageCutter(
     onCancel: () -> Unit = {},
     assignBitmap: (Bitmap) -> Unit
 ) {
-    val direction = remember { bitmap.width <= bitmap.height }
-    var offsetX by remember { mutableStateOf(-1f) }
-    var offsetY by remember { mutableStateOf(-1f) }
-    var croppedWidth by remember { mutableStateOf(0) }
-    var croppedHeight by remember { mutableStateOf(0) }
-    var cropped by remember { mutableStateOf(createBitmap(1, 1)) }
+    val density = LocalDensity.current
+    val cutoutPx = remember(sizeDp, density) { with(density) { sizeDp.toPx() } }
+
+    val imageBitmap = remember(bitmap) { bitmap.asImageBitmap() }
+
+    val baseScale = remember(bitmap, cutoutPx) {
+        maxOf(cutoutPx / bitmap.width.toFloat(), cutoutPx / bitmap.height.toFloat())
+    }
+
+    var scale by remember { mutableFloatStateOf(1f) }
+    var offset by remember { mutableStateOf(Offset.Zero) }
 
     Surface(
         modifier = Modifier
@@ -199,14 +208,27 @@ fun ImageCutter(
                 .fillMaxSize()
                 .navigationBarsPadding()
                 .pointerInput(Unit) {
-                    detectTransformGestures { _, pan, _, _ ->
-                        if (direction) {
-                            val increment = offsetY - pan.y
-                            if (increment in 0f..croppedHeight.toFloat() - croppedWidth) offsetY = increment
-                        } else {
-                            val increment = offsetX - pan.x
-                            if (increment in 0f..croppedWidth.toFloat() - croppedHeight) offsetX = increment
-                        }
+                    detectTransformGestures { _, pan, zoom, _ ->
+                        val centerPivot = Offset(cutoutPx / 2f, cutoutPx / 2f)
+
+                        val oldScale = scale
+                        val newScale = (scale * zoom).coerceIn(1f, 4f)
+                        val actualZoom = newScale / oldScale
+
+                        var newX = (offset.x + pan.x - centerPivot.x) * actualZoom + centerPivot.x
+                        var newY = (offset.y + pan.y - centerPivot.y) * actualZoom + centerPivot.y
+
+                        val scaledWidth = bitmap.width * baseScale * newScale
+                        val scaledHeight = bitmap.height * baseScale * newScale
+
+                        val minX = minOf(0f, cutoutPx - scaledWidth)
+                        val minY = minOf(0f, cutoutPx - scaledHeight)
+
+                        newX = newX.coerceIn(minX, 0f)
+                        newY = newY.coerceIn(minY, 0f)
+
+                        scale = newScale
+                        offset = Offset(newX, newY)
                     }
                 }
         ) {
@@ -245,24 +267,19 @@ fun ImageCutter(
                         Canvas(
                             modifier = Modifier.fillMaxSize(),
                         ) {
-                            val width = size.width.toInt()
-                            val height = size.height.toInt()
-                            cropped = cropBitmap(bitmap, width, height, true)
-                            croppedWidth = cropped.width
-                            croppedHeight = cropped.height
+                            val totalScale = baseScale * scale
 
-                            if (offsetX == -1f && offsetY == -1f) {
-                                offsetX = (croppedWidth - width) / 2f
-                                offsetY = (croppedHeight - height) / 2f
+                            withTransform({
+                                translate(
+                                    left = offset.x,
+                                    top = offset.y
+                                )
+                                scale(totalScale, totalScale, pivot = Offset.Zero)
+                            }) {
+                                drawImage(imageBitmap)
                             }
 
-                            drawImage(
-                                image = cropped.asImageBitmap(),
-                                dstOffset = IntOffset(-offsetX.toInt(), -offsetY.toInt())
-                            )
-
                             val radiusPx = size.width / 2 - 20f
-
                             val maskPath = Path().apply {
                                 addRect(Rect(Offset.Zero, size))
                                 val left = center.x - radiusPx
@@ -280,22 +297,16 @@ fun ImageCutter(
                                 )
                                 fillType = PathFillType.EvenOdd
                             }
-
-                            drawPath(
-                                path = maskPath,
-                                color = Color.Black.copy(alpha = 0.6f)
-                            )
+                            drawPath(path = maskPath, color = Color.Black.copy(alpha = 0.6f))
 
                             val thinStrokeW = 1.dp.toPx()
                             val thinLineColor = Color.White.copy(alpha = 0.6f)
-
                             drawRect(
                                 color = thinLineColor,
                                 topLeft = Offset.Zero,
                                 size = size,
                                 style = Stroke(width = thinStrokeW)
                             )
-
                             drawCircle(
                                 color = thinLineColor,
                                 radius = radiusPx,
@@ -309,52 +320,102 @@ fun ImageCutter(
                             val lineColor = Color.White
 
                             val topLPath = Path().apply {
-                                moveTo(cornerLength, halfStroke)
-                                lineTo(halfStroke, halfStroke)
-                                lineTo(halfStroke, cornerLength)
+                                moveTo(cornerLength, halfStroke); lineTo(
+                                halfStroke,
+                                halfStroke
+                            ); lineTo(halfStroke, cornerLength)
                             }
-                            drawPath(path = topLPath, color = lineColor, style = Stroke(width = strokeW, cap = StrokeCap.Square))
+                            drawPath(
+                                path = topLPath,
+                                color = lineColor,
+                                style = Stroke(width = strokeW, cap = StrokeCap.Square)
+                            )
 
                             val topRPath = Path().apply {
-                                moveTo(size.width - cornerLength, halfStroke)
-                                lineTo(size.width - halfStroke, halfStroke)
-                                lineTo(size.width - halfStroke, cornerLength)
+                                moveTo(
+                                    size.width - cornerLength,
+                                    halfStroke
+                                ); lineTo(
+                                size.width - halfStroke,
+                                halfStroke
+                            ); lineTo(size.width - halfStroke, cornerLength)
                             }
-                            drawPath(path = topRPath, color = lineColor, style = Stroke(width = strokeW, cap = StrokeCap.Square))
+                            drawPath(
+                                path = topRPath,
+                                color = lineColor,
+                                style = Stroke(width = strokeW, cap = StrokeCap.Square)
+                            )
 
                             val bottomLPath = Path().apply {
-                                moveTo(cornerLength, size.height - halfStroke)
-                                lineTo(halfStroke, size.height - halfStroke)
-                                lineTo(halfStroke, size.height - cornerLength)
+                                moveTo(
+                                    cornerLength,
+                                    size.height - halfStroke
+                                ); lineTo(halfStroke, size.height - halfStroke); lineTo(
+                                halfStroke,
+                                size.height - cornerLength
+                            )
                             }
-                            drawPath(path = bottomLPath, color = lineColor, style = Stroke(width = strokeW, cap = StrokeCap.Square))
+                            drawPath(
+                                path = bottomLPath,
+                                color = lineColor,
+                                style = Stroke(width = strokeW, cap = StrokeCap.Square)
+                            )
 
                             val bottomRPath = Path().apply {
-                                moveTo(size.width - cornerLength, size.height - halfStroke)
-                                lineTo(size.width - halfStroke, size.height - halfStroke)
-                                lineTo(size.width - halfStroke, size.height - cornerLength)
+                                moveTo(
+                                    size.width - cornerLength,
+                                    size.height - halfStroke
+                                ); lineTo(
+                                size.width - halfStroke,
+                                size.height - halfStroke
+                            ); lineTo(size.width - halfStroke, size.height - cornerLength)
                             }
-                            drawPath(path = bottomRPath, color = lineColor, style = Stroke(width = strokeW, cap = StrokeCap.Square))
+                            drawPath(
+                                path = bottomRPath,
+                                color = lineColor,
+                                style = Stroke(width = strokeW, cap = StrokeCap.Square)
+                            )
 
                             val sideMarkLength = 40f
                             val halfMark = sideMarkLength / 2f
-
-                            drawLine(color = lineColor, start = Offset(center.x - halfMark, halfStroke), end = Offset(center.x + halfMark, halfStroke), strokeWidth = strokeW, cap = StrokeCap.Square)
-                            drawLine(color = lineColor, start = Offset(center.x - halfMark, size.height - halfStroke), end = Offset(center.x + halfMark, size.height - halfStroke), strokeWidth = strokeW, cap = StrokeCap.Square)
-                            drawLine(color = lineColor, start = Offset(halfStroke, center.y - halfMark), end = Offset(halfStroke, center.y + halfMark), strokeWidth = strokeW, cap = StrokeCap.Square)
-                            drawLine(color = lineColor, start = Offset(size.width - halfStroke, center.y - halfMark), end = Offset(size.width - halfStroke, center.y + halfMark), strokeWidth = strokeW, cap = StrokeCap.Square)
-
                             drawLine(
-                                start = Offset(width / 2f - 20f, height / 2f),
-                                end = Offset(width / 2f + 20f, height / 2f),
+                                color = lineColor,
+                                start = Offset(center.x - halfMark, halfStroke),
+                                end = Offset(center.x + halfMark, halfStroke),
+                                strokeWidth = strokeW,
+                                cap = StrokeCap.Square
+                            )
+                            drawLine(
+                                color = lineColor,
+                                start = Offset(center.x - halfMark, size.height - halfStroke),
+                                end = Offset(center.x + halfMark, size.height - halfStroke),
+                                strokeWidth = strokeW,
+                                cap = StrokeCap.Square
+                            )
+                            drawLine(
+                                color = lineColor,
+                                start = Offset(halfStroke, center.y - halfMark),
+                                end = Offset(halfStroke, center.y + halfMark),
+                                strokeWidth = strokeW,
+                                cap = StrokeCap.Square
+                            )
+                            drawLine(
+                                color = lineColor,
+                                start = Offset(size.width - halfStroke, center.y - halfMark),
+                                end = Offset(size.width - halfStroke, center.y + halfMark),
+                                strokeWidth = strokeW,
+                                cap = StrokeCap.Square
+                            )
+                            drawLine(
+                                start = Offset(size.width / 2f - 20f, size.height / 2f),
+                                end = Offset(size.width / 2f + 20f, size.height / 2f),
                                 strokeWidth = strokeW,
                                 color = lineColor,
                                 cap = StrokeCap.Square
                             )
-
                             drawLine(
-                                start = Offset(width / 2f, height / 2f - 20f),
-                                end = Offset(width / 2f, height / 2f + 20f),
+                                start = Offset(size.width / 2f, size.height / 2f - 20f),
+                                end = Offset(size.width / 2f, size.height / 2f + 20f),
                                 strokeWidth = strokeW,
                                 color = lineColor,
                                 cap = StrokeCap.Square
@@ -375,9 +436,8 @@ fun ImageCutter(
                         .fillMaxWidth()
                         .height(overlayHeight)
                         .align(Alignment.BottomStart)
-                        .zIndex(2f),
-                    contentAlignment = Alignment.Center
-                ) {}
+                        .zIndex(2f)
+                )
 
                 Row(
                     modifier = Modifier
@@ -399,9 +459,19 @@ fun ImageCutter(
 
                     MainButton(
                         onclick = {
-                            val side = min(croppedWidth, croppedHeight)
-                            val ans = Bitmap.createBitmap(cropped, offsetX.toInt(), offsetY.toInt(), side, side)
-                            assignBitmap(ans)
+                            val totalScale = baseScale * scale
+                            val cropSize = cutoutPx / totalScale
+
+                            val startX = (-offset.x / totalScale).toInt().coerceAtLeast(0)
+                            val startY = (-offset.y / totalScale).toInt().coerceAtLeast(0)
+
+                            val width = minOf(cropSize.toInt(), bitmap.width - startX)
+                            val height = minOf(cropSize.toInt(), bitmap.height - startY)
+
+                            val finalCroppedBitmap = Bitmap.createBitmap(
+                                bitmap, startX, startY, width, height
+                            )
+                            assignBitmap(finalCroppedBitmap)
                         },
                         text = "Confirm",
                         icon = true,
@@ -412,6 +482,7 @@ fun ImageCutter(
         }
     }
 }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MySlider(
@@ -805,6 +876,7 @@ fun ExportOptionDialog(
 @Composable
 fun ExportProgressDialog(
     progress: Float,
+    title: String = "Rendering Video",
     onDismissRequest: () -> Unit
 ) {
     val phrases = remember {
@@ -849,7 +921,7 @@ fun ExportProgressDialog(
                     verticalAlignment = Alignment.CenterVertically
                 ) {
                     Text(
-                        text = "Rendering Video",
+                        text = title,
                         fontFamily = Jakarta,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
@@ -888,7 +960,7 @@ fun ExportProgressDialog(
                     shape = RoundedCornerShape(12.dp),
                     color = SoftBackground
                 ) {
-                    AnimatedContent (
+                    AnimatedContent(
                         targetState = phrases[currentPhraseIndex],
                         transitionSpec = {
                             slideInVertically { height -> height } + fadeIn() togetherWith
