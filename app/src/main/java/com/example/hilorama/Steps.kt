@@ -7,8 +7,10 @@ import android.graphics.Paint
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.net.Uri
+import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
@@ -58,6 +60,7 @@ import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
@@ -67,11 +70,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import androidx.core.graphics.blue
 import androidx.core.graphics.createBitmap
+import androidx.core.graphics.green
+import androidx.core.graphics.red
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+@RequiresApi(Build.VERSION_CODES.O)
 @Preview
 @Composable
 fun StepsCore() {
@@ -88,6 +95,7 @@ fun StepsCore() {
     var stepBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
     var toDrawBitmap by remember { mutableStateOf(bitmapToGray(bitmap)) }
     var grayImage by remember { mutableStateOf(floatArrayOf()) }
+    var croppedBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
 
     var nails by remember { mutableStateOf(floatArrayOf()) }
     val nailsToDraw = remember { mutableStateListOf<Thread>() }
@@ -102,6 +110,27 @@ fun StepsCore() {
 
     var currIndex by remember { mutableStateOf(0) }
     var indexToDraw by remember { mutableStateOf(0) }
+
+    var strongChannel = remember(colorMode) {
+        when(colorMode) {
+            1 -> listOf(
+                Color.White
+            )
+            2 -> listOf (
+                Color.Black,
+                Color.Cyan,
+                Color.Magenta,
+                Color.Yellow
+            )
+            3 -> listOf(
+                Color.White,
+                Color.Red,
+                Color.Green,
+                Color.Blue
+            )
+            else -> listOf(Color.Black)
+        }
+    }
 
     val channelPaints = remember(colorMode) {
         when (colorMode) {
@@ -396,10 +425,25 @@ fun StepsCore() {
                         val curr0Y = nails[2 * curr0 + 1]
                         val curr1X = nails[2 * curr1]
                         val curr1Y = nails[2 * curr1 + 1]
-                        val color = nailsToDraw[currIndex].color
+                        val colorIndex = nailsToDraw[currIndex].color
+
+                        val lineBg = Paint().apply {
+                            color = backgroundColor;
+                            strokeWidth = 6f;
+                        }
+
+                        val lineStroke = Paint().apply {
+                            color = strongChannel[colorIndex].toArgb();
+                            strokeWidth = 3f;
+                            xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
+                        }
 
                         drawContext.canvas.nativeCanvas.drawLine(
-                            curr0X, curr0Y, curr1X, curr1Y, channelPaints[color].apply { strokeWidth = 2f }
+                            curr0X, curr0Y, curr1X, curr1Y, lineBg
+                        )
+
+                        drawContext.canvas.nativeCanvas.drawLine(
+                            curr0X, curr0Y, curr1X, curr1Y, lineStroke
                         )
 
                         NumberCircle(
@@ -437,7 +481,7 @@ fun StepsCore() {
                 val curr0Y = nails[2 * curr0 + 1]
                 val curr1X = nails[2 * curr1]
                 val curr1Y = nails[2 * curr1 + 1]
-                val color = nailsToDraw[currIndex].color
+                val color = nailsToDraw[index].color
 
                 if (paint){
                     AndroidCanvas(accumulatedBitmap).drawLine(curr0X, curr0Y, curr1X, curr1Y, channelPaints[color])
@@ -480,7 +524,8 @@ fun StepsCore() {
                                     selectThread(currIndex)
                                 },
                                 modifier = Modifier.fillMaxSize(),
-                                state = listState
+                                state = listState,
+                                channel = strongChannel
                             )
                         }
                     }

@@ -471,7 +471,6 @@ fun NumberCircle(
     val fontMetrics = paint.fontMetrics
     val translateY = center.y - (fontMetrics.ascent + fontMetrics.descent) / 2f
 
-
     drawContext.canvas.nativeCanvas.drawText(
         textString,
         center.x,

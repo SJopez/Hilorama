@@ -1032,7 +1032,8 @@ fun BottomNavigationRow(
 @Composable
 fun ThreadItem(
     index: Int,
-    thread: Thread,
+    nail1: Int,
+    nail2: Int,
     selected: Boolean,
     color: Color = Color.Red,
     modifier: Modifier = Modifier,
@@ -1086,7 +1087,7 @@ fun ThreadItem(
                 fontFamily = Jakarta
             )
             Text(
-                text = "${thread.nail1}",
+                text = "${nail1}",
                 color = textColor,
                 fontSize = 14.sp,
                 fontFamily = Jakarta,
@@ -1108,7 +1109,7 @@ fun ThreadItem(
                 fontFamily = Jakarta
             )
             Text(
-                text = "${thread.nail2}",
+                text = "${nail2}",
                 color = textColor,
                 fontSize = 14.sp,
                 fontFamily = Jakarta,
@@ -1125,15 +1126,20 @@ fun ThreadList(
     current: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
-    state: LazyListState
+    state: LazyListState,
+    channel: List<Color>
 ){
     LazyColumn(
         state = state,
         modifier = modifier.padding(horizontal = 8.dp)
     ){
         for (i in 0..indexToDraw){
+            val nail1 = nailsToDraw[i].nail1
+            val nail2 = nailsToDraw[i].nail2
+            val color = nailsToDraw[i].color
+
             item {
-                ThreadItem(i, nailsToDraw[i], i == current, onSelect = onSelect)
+                ThreadItem(i, nail1, nail2, i == current, onSelect = onSelect, color = channel[color])
             }
         }
     }
