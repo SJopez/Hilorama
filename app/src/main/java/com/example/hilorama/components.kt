@@ -28,6 +28,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.displayCutoutPadding
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,6 +36,8 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -46,6 +49,7 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Slider
@@ -983,6 +987,151 @@ fun ExportProgressDialog(
                         )
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+fun BottomNavigationRow(
+    onNextClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier.weight(1f),
+            contentAlignment = Alignment.Center
+        ) {
+            Button(
+                onClick = onNextClick,
+                shape = RoundedCornerShape(50),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = SoftPrimary
+                ),
+                contentPadding = PaddingValues(horizontal = 32.dp, vertical = 14.dp)
+            ) {
+                Text(
+                    text = "Next Thread",
+                    color = Color.White,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 16.sp,
+                    fontFamily = Jakarta
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun ThreadItem(
+    index: Int,
+    thread: Thread,
+    selected: Boolean,
+    color: Color = Color.Red,
+    modifier: Modifier = Modifier,
+    onSelect: (Int) -> Unit
+) {
+    val backgroundColor = if (selected) SoftPrimary.copy(alpha = 0.08f) else Color.Transparent
+    val textColor = if (selected) Color.Black else Color.Gray
+
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clickable(onClick = { onSelect(index) })
+            .clip(RoundedCornerShape(8.dp))
+            .background(backgroundColor)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier.size(10.dp),
+            contentAlignment = Alignment.Center
+        ) {
+            if (selected) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .clip(CircleShape)
+                        .background(SoftPrimary)
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = "$index",
+            color = if (selected) TextPrimary else TextSecondary,
+            fontSize = 14.sp,
+            fontFamily = Jakarta,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier.width(42.dp)
+        )
+
+        Row(
+            modifier = Modifier.weight(1f),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "From ",
+                color = Color.Gray,
+                fontSize = 12.sp,
+                fontFamily = Jakarta
+            )
+            Text(
+                text = "${thread.nail1}",
+                color = textColor,
+                fontSize = 14.sp,
+                fontFamily = Jakarta,
+                fontWeight = FontWeight.SemiBold
+            )
+
+            Box(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 8.dp)
+                    .height(1.dp)
+                    .background(color.copy(alpha = if (selected) 0.5f else 0.2f))
+            )
+
+            Text(
+                text = "To ",
+                color = Color.Gray,
+                fontSize = 12.sp,
+                fontFamily = Jakarta
+            )
+            Text(
+                text = "${thread.nail2}",
+                color = textColor,
+                fontSize = 14.sp,
+                fontFamily = Jakarta,
+                fontWeight = FontWeight.SemiBold
+            )
+        }
+    }
+}
+
+@Composable
+fun ThreadList(
+    indexToDraw: Int,
+    nailsToDraw: MutableList<Thread>,
+    current: Int,
+    onSelect: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    state: LazyListState
+){
+    LazyColumn(
+        state = state,
+        modifier = modifier.padding(horizontal = 8.dp)
+    ){
+        for (i in 0..indexToDraw){
+            item {
+                ThreadItem(i, nailsToDraw[i], i == current, onSelect = onSelect)
             }
         }
     }

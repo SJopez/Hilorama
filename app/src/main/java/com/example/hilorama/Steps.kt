@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
@@ -86,8 +87,8 @@ fun StepsCore() {
 
     var nails by remember { mutableStateOf(floatArrayOf()) }
     val nailsToDraw = remember { mutableStateListOf<Thread>() }
-    var threadCount by remember { mutableStateOf(6000) }
-    var realThreadCount by remember { mutableStateOf(6000) }
+    var threadCount by remember { mutableStateOf(1000) }
+    var realThreadCount by remember { mutableStateOf(1000) }
     var nailCount by remember { mutableStateOf(360) }
 
     var loadingThreads by remember { mutableStateOf(false) }
@@ -95,6 +96,8 @@ fun StepsCore() {
 
     val screenWidth = LocalConfiguration.current.screenWidthDp
 
+    var currIndex by remember { mutableStateOf(0) }
+    var indexToDraw by remember { mutableStateOf(0) }
 
     val channelPaints = remember(colorMode) {
         when (colorMode) {
@@ -268,8 +271,7 @@ fun StepsCore() {
                 .fillMaxSize()
                 .displayCutoutPadding()
                 .navigationBarsPadding()
-                .padding(vertical = 8.dp)
-                .verticalScroll(rememberScrollState()),
+                .padding(vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -389,6 +391,40 @@ fun StepsCore() {
                         i += 2
                     }
                 }
+            }
+
+            val listState = rememberLazyListState()
+
+            LaunchedEffect(indexToDraw) {
+                withContext(Dispatchers.Default){
+                    listState.animateScrollToItem(indexToDraw)
+                }
+            }
+
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ){
+                if (nailsToDraw.size > 0){
+                    ThreadList(
+                        indexToDraw = indexToDraw,
+                        nailsToDraw = nailsToDraw,
+                        current = currIndex,
+                        onSelect = { index ->
+                            currIndex = index
+                        },
+                        modifier = Modifier.weight(1f),
+                        state = listState
+                    )
+                }
+                BottomNavigationRow(
+                    onNextClick = {
+                        if (indexToDraw + 1 < nailsToDraw.size){
+                            indexToDraw += 1
+                            currIndex = indexToDraw
+                        }
+                    }
+                )
             }
         }
 
