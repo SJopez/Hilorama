@@ -30,8 +30,10 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -55,6 +57,7 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.clipPath
+import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
@@ -82,6 +85,7 @@ fun StepsCore() {
         mutableStateOf(BitmapFactory.decodeResource(context.resources, R.drawable.perl))
     }
     var accumulatedBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
+    var stepBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
     var toDrawBitmap by remember { mutableStateOf(bitmapToGray(bitmap)) }
     var grayImage by remember { mutableStateOf(floatArrayOf()) }
 
@@ -194,6 +198,7 @@ fun StepsCore() {
             val freshBitmap = createBitmap(width, height)
             AndroidCanvas(freshBitmap).drawColor(backgroundColor)
             accumulatedBitmap = freshBitmap
+            stepBitmap = freshBitmap
 
             nails = getNails(width / 2 - 20f, 20, nailCount)
             lastCalc = System.currentTimeMillis()
@@ -205,12 +210,7 @@ fun StepsCore() {
 
         fun paintThread(nail1: Int, nail2: Int, color: Int) {
             if ((2 * maxOf(nail1, nail2) + 1) >= nails.size) return
-/*
-            val x0 = nails[2 * nail1]
-            val y0 = nails[2 * nail1 + 1]
-            val x1 = nails[2 * nail2]
-            val y1 = nails[2 * nail2 + 1]
-*/
+
             nailsToDraw.add(Thread(nail1, nail2, color))
             threadsProg = nailsToDraw.size / realThreadCount.toFloat()
         }
@@ -273,7 +273,7 @@ fun StepsCore() {
                 .navigationBarsPadding()
                 .padding(vertical = 8.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
                 modifier = Modifier
@@ -321,21 +321,20 @@ fun StepsCore() {
                     active = true,
                     context = context
                 )
+
             }
+
+            var curr0 by remember { mutableStateOf(-1) }
+            var curr1 by remember { mutableStateOf(-1) }
 
             Box(
                 modifier = Modifier
-                    .size(canvasContainerSize)
-                    .shadow(16.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.12f))
-                    .clip(CircleShape)
-                    .background(SoftSurface)
-                    .border(1.5.dp, SoftBorder, CircleShape),
+                    .size(canvasContainerSize),
                 contentAlignment = Alignment.Center
             ) {
                 Canvas(
                     modifier = Modifier
                         .fillMaxSize()
-                        .clipToBounds()
                         .onSizeChanged { size ->
                             canvasSize = size
                             scope.launch { fadePosition.snapTo(size.width - 10f) }
@@ -354,7 +353,7 @@ fun StepsCore() {
                     drawCircle(
                         center = Offset(center.x, center.y),
                         radius = size.width / 2f - 20f,
-                        color = composeBackgroundColor
+                        color = composeBackgroundColor,
                     )
 
                     val radiusPx = size.width / 2 - 20f
@@ -388,40 +387,111 @@ fun StepsCore() {
                         val x = nails[i]
                         val y = nails[i + 1]
                         drawCircle(center = Offset(x, y), color = TextPrimary, radius = 1.2f)
+
                         i += 2
                     }
+
+                    if (curr0 >= 0 && curr1 >= 0){
+                        val curr0X = nails[2 * curr0]
+                        val curr0Y = nails[2 * curr0 + 1]
+                        val curr1X = nails[2 * curr1]
+                        val curr1Y = nails[2 * curr1 + 1]
+                        val color = nailsToDraw[currIndex].color
+
+                        drawContext.canvas.nativeCanvas.drawLine(
+                            curr0X, curr0Y, curr1X, curr1Y, channelPaints[color].apply { strokeWidth = 2f }
+                        )
+
+                        NumberCircle(
+                            number = curr0,
+                            center = Offset(curr0X, curr0Y),
+                            radius = 24f,
+                            canvas = this,
+                            drawContext = drawContext
+                        )
+
+                        NumberCircle(
+                            number = curr1,
+                            center = Offset(curr1X, curr1Y),
+                            radius = 24f,
+                            canvas = this,
+                            drawContext = drawContext
+                        )
+                    }
+
                 }
             }
 
             val listState = rememberLazyListState()
 
             LaunchedEffect(indexToDraw) {
-                withContext(Dispatchers.Default){
-                    listState.animateScrollToItem(indexToDraw)
+                listState.animateScrollToItem(indexToDraw)
+            }
+
+            fun selectThread(index: Int, paint: Boolean = false){
+                val thread = nailsToDraw[index]
+                curr0 = thread.nail1
+                curr1 = thread.nail2
+
+                val curr0X = nails[2 * curr0]
+                val curr0Y = nails[2 * curr0 + 1]
+                val curr1X = nails[2 * curr1]
+                val curr1Y = nails[2 * curr1 + 1]
+                val color = nailsToDraw[currIndex].color
+
+                if (paint){
+                    AndroidCanvas(accumulatedBitmap).drawLine(curr0X, curr0Y, curr1X, curr1Y, channelPaints[color])
                 }
             }
 
             Column(
-                modifier = Modifier.fillMaxSize(),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ){
-                if (nailsToDraw.size > 0){
-                    ThreadList(
-                        indexToDraw = indexToDraw,
-                        nailsToDraw = nailsToDraw,
-                        current = currIndex,
-                        onSelect = { index ->
-                            currIndex = index
-                        },
-                        modifier = Modifier.weight(1f),
-                        state = listState
-                    )
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(SoftBackground)
+                    .padding(horizontal = 16.dp)
+                    .navigationBarsPadding(),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                if (nailsToDraw.isNotEmpty()) {
+                    Surface(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .shadow(
+                                elevation = 4.dp,
+                                shape = RoundedCornerShape(20.dp),
+                                clip = false
+                            ),
+                        shape = RoundedCornerShape(20.dp),
+                        color = SoftSurface,
+                        border = androidx.compose.foundation.BorderStroke(1.dp, SoftBorder)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .padding(6.dp)
+                        ) {
+                            ThreadList(
+                                indexToDraw = indexToDraw,
+                                nailsToDraw = nailsToDraw,
+                                current = currIndex,
+                                onSelect = { index ->
+                                    currIndex = index
+                                    selectThread(currIndex)
+                                },
+                                modifier = Modifier.fillMaxSize(),
+                                state = listState
+                            )
+                        }
+                    }
                 }
+
                 BottomNavigationRow(
                     onNextClick = {
                         if (indexToDraw + 1 < nailsToDraw.size){
                             indexToDraw += 1
                             currIndex = indexToDraw
+                            selectThread(currIndex, true)
                         }
                     }
                 )

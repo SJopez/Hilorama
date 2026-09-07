@@ -100,6 +100,8 @@ val Jakarta = FontFamily(
     Font(R.font.jakarta03, FontWeight.Bold)
 )
 val SoftPrimary = Color(0xFF6054C9)
+
+val ExtraSoftPrimary = Color(0xFF877FDA)
 val SoftBackground = Color(0xFFF8F9FA)
 val SoftSurface = Color(0xFFFFFFFF)
 val TextPrimary = Color(0xFF2D3436)
@@ -1065,7 +1067,7 @@ fun ThreadItem(
         Spacer(modifier = Modifier.width(12.dp))
 
         Text(
-            text = "$index",
+            text = "${index + 1}",
             color = if (selected) TextPrimary else TextSecondary,
             fontSize = 14.sp,
             fontFamily = Jakarta,

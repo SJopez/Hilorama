@@ -7,6 +7,7 @@ import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
 import android.graphics.Paint
+import android.graphics.Path
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -14,14 +15,26 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.ui.geometry.Offset
 import androidx.annotation.OptIn
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.DrawContext
+import androidx.compose.ui.graphics.drawscope.DrawScope
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.layer.GraphicsLayer
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import androidx.core.graphics.createBitmap
 import kotlin.math.max
 import androidx.core.graphics.scale
@@ -30,6 +43,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
+import kotlin.io.path.Path
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
@@ -408,4 +422,60 @@ suspend fun exportStringArtVideo(
             Toast.makeText(context, "❌ Error saving the video", Toast.LENGTH_SHORT).show()
         }
     }
+}
+
+fun NumberCircle(
+    number: Int,
+    center: Offset,
+    radius: Float,
+    circleColor: Color = SoftBackground,
+    textColor: Color = TextPrimary,
+    borderColor: Color = SoftPrimary,
+    canvas: DrawScope,
+    drawContext: DrawContext
+) {
+    canvas.drawCircle(
+        center = center,
+        radius = radius,
+        color = circleColor
+    )
+    canvas.drawCircle(
+        center = center,
+        radius = radius,
+        color = borderColor,
+        style = Stroke(width = 2f)
+    )
+
+    val textString = number.toString()
+    val targetWidth = 2 * radius * 0.65f
+
+    val paint = Paint().apply {
+        isAntiAlias = true
+        color = textColor.toArgb()
+        textAlign = Paint.Align.CENTER
+        isFakeBoldText = true
+    }
+
+    var fontSize = radius
+    paint.textSize = fontSize
+
+    val textBounds = android.graphics.Rect()
+    paint.getTextBounds(textString, 0, textString.length, textBounds)
+
+    while (textBounds.width() > targetWidth && fontSize > 8f) {
+        fontSize -= 2f
+        paint.textSize = fontSize
+        paint.getTextBounds(textString, 0, textString.length, textBounds)
+    }
+
+    val fontMetrics = paint.fontMetrics
+    val translateY = center.y - (fontMetrics.ascent + fontMetrics.descent) / 2f
+
+
+    drawContext.canvas.nativeCanvas.drawText(
+        textString,
+        center.x,
+        translateY,
+        paint
+    )
 }
