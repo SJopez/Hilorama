@@ -548,7 +548,8 @@ fun HiloramaControls(
     nailCountRange: IntRange = 100..360,
     threadCountRange: IntRange = 1000..12000,
     active: Boolean,
-    context: Context
+    context: Context,
+    borders: Boolean = true
 ) {
     Card(
         modifier = modifier
@@ -556,8 +557,8 @@ fun HiloramaControls(
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(20.dp),
         colors = CardDefaults.cardColors(containerColor = SoftSurface),
-        elevation = CardDefaults.cardElevation(defaultElevation = 6.dp),
-        border = BorderStroke(1.5.dp, SoftBorder)
+        elevation = CardDefaults.cardElevation(defaultElevation = if(borders) 6.dp else 0.dp),
+        border = BorderStroke(if (borders) 1.5.dp else 0.dp, SoftBorder)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -1037,7 +1038,8 @@ fun ThreadItem(
     selected: Boolean,
     color: Color = Color.Red,
     modifier: Modifier = Modifier,
-    onSelect: (Int) -> Unit
+    onSelect: (Int) -> Unit,
+    background: Color
 ) {
     val backgroundColor = if (selected) SoftPrimary.copy(alpha = 0.08f) else Color.Transparent
     val textColor = if (selected) Color.Black else Color.Gray
@@ -1098,9 +1100,17 @@ fun ThreadItem(
                 modifier = Modifier
                     .weight(1f)
                     .padding(horizontal = 8.dp)
-                    .height(1.dp)
-                    .background(color.copy(alpha = if (selected) 0.5f else 0.2f))
-            )
+                    .height(3.dp)
+                    .background(background.copy(alpha = if (selected) 1f else 0.2f)),
+                contentAlignment = Alignment.Center
+            ){
+                Box(
+                    modifier = Modifier
+                        .height(1.dp)
+                        .fillMaxWidth()
+                        .background(color.copy(alpha = if (selected) 1f else 0.4f))
+                )
+            }
 
             Text(
                 text = "To ",
@@ -1127,19 +1137,28 @@ fun ThreadList(
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,
     state: LazyListState,
-    channel: List<Color>
+    channel: List<Color>,
 ){
     LazyColumn(
         state = state,
         modifier = modifier.padding(horizontal = 8.dp)
     ){
-        for (i in 0..indexToDraw){
-            val nail1 = nailsToDraw[i].nail1
-            val nail2 = nailsToDraw[i].nail2
-            val color = nailsToDraw[i].color
+        if (nailsToDraw.size > indexToDraw){
+            for (i in 0..indexToDraw){
+                val nail1 = nailsToDraw[i].nail1
+                val nail2 = nailsToDraw[i].nail2
+                val color = nailsToDraw[i].color
 
-            item {
-                ThreadItem(i, nail1, nail2, i == current, onSelect = onSelect, color = channel[color])
+                item {
+                    ThreadItem(
+                        i,
+                        nail1,
+                        nail2,
+                        i == current,
+                        onSelect = onSelect,
+                        color = channel[color],
+                        background = if (channel[color] == Color.White) Color.Black else Color.Transparent)
+                }
             }
         }
     }

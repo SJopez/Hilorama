@@ -1,5 +1,6 @@
 package com.example.hilorama
 
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Color as AndroidColor
@@ -13,6 +14,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -36,6 +38,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -66,9 +69,12 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.blue
 import androidx.core.graphics.createBitmap
@@ -182,7 +188,8 @@ fun StepsCore() {
         }
     }
 
-    var needToCut by rememberSaveable { mutableStateOf(true) }
+    var needToCut by remember { mutableStateOf(true) }
+    var confiStep by remember { mutableStateOf(false) }
     var redrawTrigger by remember { mutableStateOf(0) }
 
     val launcher = rememberLauncherForActivityResult(
@@ -211,11 +218,13 @@ fun StepsCore() {
             val width = canvasSize.width
             val height = canvasSize.height
 
+            croppedBitmap = cropBitmap(bitmap, width, height)
+
             when(colorMode){
-                0 -> { grayImage = imageToGray(bitmap) }
-                1 -> { grayImage = imageToGray(bitmap, true) }
-                2 -> { channels = imageToCMY(bitmap, threadCount) }
-                3 -> { channels = imageToRGB(bitmap, threadCount) }
+                0 -> { grayImage = imageToGray(croppedBitmap) }
+                1 -> { grayImage = imageToGray(croppedBitmap, true) }
+                2 -> { channels = imageToCMY(croppedBitmap, threadCount) }
+                3 -> { channels = imageToRGB(croppedBitmap, threadCount) }
             }
 
             realThreadCount = if (colorMode > 1) {
@@ -248,29 +257,48 @@ fun StepsCore() {
 
         withContext(Dispatchers.Default) {
             if (colorMode > 1) {
-                HiloramaEngine.drawImage(0, channels.channel0.threads, channels.channel0.channel, nails, bitmap.width,
+                HiloramaEngine.drawImage(0, channels.channel0.threads, channels.channel0.channel, nails, croppedBitmap.width,
                     object : ThreadAdding {
                         override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 0)
                     })
-                HiloramaEngine.drawImage(2, channels.channel2.threads, channels.channel2.channel, nails, bitmap.width,
+                HiloramaEngine.drawImage(2, channels.channel2.threads, channels.channel2.channel, nails, croppedBitmap.width,
                     object : ThreadAdding {
                         override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 2)
                     })
-                HiloramaEngine.drawImage(3, channels.channel3.threads, channels.channel3.channel, nails, bitmap.width,
+                HiloramaEngine.drawImage(3, channels.channel3.threads, channels.channel3.channel, nails, croppedBitmap.width,
                     object : ThreadAdding {
                         override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 3)
                     })
-                HiloramaEngine.drawImage(1, channels.channel1.threads, channels.channel1.channel, nails, bitmap.width,
+                HiloramaEngine.drawImage(1, channels.channel1.threads, channels.channel1.channel, nails, croppedBitmap.width,
                     object : ThreadAdding {
                         override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 1)
                     })
             } else {
-                HiloramaEngine.drawImage(0, threadCount, grayImage, nails, bitmap.width,
+                HiloramaEngine.drawImage(0, threadCount, grayImage, nails, croppedBitmap.width,
                     object : ThreadAdding {
                         override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 0)
                     })
             }
             redrawTrigger++
+        }
+    }
+
+    var curr0 by remember { mutableStateOf(-1) }
+    var curr1 by remember { mutableStateOf(-1) }
+
+    fun selectThread(index: Int, paint: Boolean = false){
+        val thread = nailsToDraw[index]
+        curr0 = thread.nail1
+        curr1 = thread.nail2
+
+        val curr0X = nails[2 * curr0]
+        val curr0Y = nails[2 * curr0 + 1]
+        val curr1X = nails[2 * curr1]
+        val curr1Y = nails[2 * curr1 + 1]
+        val color = nailsToDraw[index].color
+
+        if (paint){
+            AndroidCanvas(accumulatedBitmap).drawLine(curr0X, curr0Y, curr1X, curr1Y, channelPaints[color])
         }
     }
 
@@ -284,13 +312,15 @@ fun StepsCore() {
                     (screenWidth - 32).dp,
                     assignBitmap = {
                         bitmap = it
+                        toDrawBitmap = if (colorMode <= 1) bitmapToGray(bitmap) else bitmap
+                        toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
+
+                        confiStep = true
                         needToCut = false
-                        loadingThreads = true
-                        lastAssign = System.currentTimeMillis()
                     },
                     onCancel = {
                         needToCut = false
-                        bitmap = toDrawBitmap
+                        bitmap = croppedBitmap
                     }
                 )
             }
@@ -350,11 +380,7 @@ fun StepsCore() {
                     active = true,
                     context = context
                 )
-
             }
-
-            var curr0 by remember { mutableStateOf(-1) }
-            var curr1 by remember { mutableStateOf(-1) }
 
             Box(
                 modifier = Modifier
@@ -366,6 +392,7 @@ fun StepsCore() {
                         .fillMaxSize()
                         .onSizeChanged { size ->
                             canvasSize = size
+                            nails = getNails(size.width / 2 - 20f, 20, nailCount)
                             scope.launch { fadePosition.snapTo(size.width - 10f) }
                         }
                         .zIndex(0f)
@@ -420,7 +447,7 @@ fun StepsCore() {
                         i += 2
                     }
 
-                    if (curr0 >= 0 && curr1 >= 0){
+                    if (curr0 >= 0 && curr1 >= 0 && nailsToDraw.size > 0){
                         val curr0X = nails[2 * curr0]
                         val curr0Y = nails[2 * curr0 + 1]
                         val curr1X = nails[2 * curr1]
@@ -435,7 +462,7 @@ fun StepsCore() {
                         val lineStroke = Paint().apply {
                             color = strongChannel[colorIndex].toArgb();
                             strokeWidth = 3f;
-                            xfermode = PorterDuffXfermode(PorterDuff.Mode.MULTIPLY)
+                            xfermode = channelPaints[colorIndex].xfermode
                         }
 
                         drawContext.canvas.nativeCanvas.drawLine(
@@ -472,22 +499,6 @@ fun StepsCore() {
                 listState.animateScrollToItem(indexToDraw)
             }
 
-            fun selectThread(index: Int, paint: Boolean = false){
-                val thread = nailsToDraw[index]
-                curr0 = thread.nail1
-                curr1 = thread.nail2
-
-                val curr0X = nails[2 * curr0]
-                val curr0Y = nails[2 * curr0 + 1]
-                val curr1X = nails[2 * curr1]
-                val curr1Y = nails[2 * curr1 + 1]
-                val color = nailsToDraw[index].color
-
-                if (paint){
-                    AndroidCanvas(accumulatedBitmap).drawLine(curr0X, curr0Y, curr1X, curr1Y, channelPaints[color])
-                }
-            }
-
             Column(
                 modifier = Modifier
                     .fillMaxSize()
@@ -496,50 +507,57 @@ fun StepsCore() {
                     .navigationBarsPadding(),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
             ) {
-                if (nailsToDraw.isNotEmpty()) {
-                    Surface(
+                Surface(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f)
+                        .shadow(
+                            elevation = 4.dp,
+                            shape = RoundedCornerShape(20.dp),
+                            clip = false
+                        ),
+                    shape = RoundedCornerShape(20.dp),
+                    color = SoftSurface,
+                    border = BorderStroke(1.dp, SoftBorder)
+                ) {
+                    Box(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .shadow(
-                                elevation = 4.dp,
-                                shape = RoundedCornerShape(20.dp),
-                                clip = false
-                            ),
-                        shape = RoundedCornerShape(20.dp),
-                        color = SoftSurface,
-                        border = androidx.compose.foundation.BorderStroke(1.dp, SoftBorder)
+                            .fillMaxSize()
+                            .padding(6.dp)
                     ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .padding(6.dp)
-                        ) {
-                            ThreadList(
-                                indexToDraw = indexToDraw,
-                                nailsToDraw = nailsToDraw,
-                                current = currIndex,
-                                onSelect = { index ->
-                                    currIndex = index
-                                    selectThread(currIndex)
-                                },
-                                modifier = Modifier.fillMaxSize(),
-                                state = listState,
-                                channel = strongChannel
-                            )
-                        }
+                        ThreadList(
+                            indexToDraw = indexToDraw,
+                            nailsToDraw = nailsToDraw,
+                            current = currIndex,
+                            onSelect = { index ->
+                                currIndex = index
+                                selectThread(currIndex)
+                            },
+                            modifier = Modifier.fillMaxSize(),
+                            state = listState,
+                            channel = strongChannel,
+                        )
                     }
                 }
 
                 BottomNavigationRow(
                     onNextClick = {
-                        if (indexToDraw + 1 < nailsToDraw.size){
+                        if (indexToDraw + 2 < nailsToDraw.size){
                             indexToDraw += 1
                             currIndex = indexToDraw
                             selectThread(currIndex, true)
                         }
                     }
                 )
+            }
+        }
+
+        LaunchedEffect(threadsProg) {
+            if (nailsToDraw.size == realThreadCount) {
+                loadingThreads = false
+                indexToDraw = 0
+                currIndex = 0
+                selectThread(0, true)
             }
         }
 
@@ -552,5 +570,64 @@ fun StepsCore() {
                 }
             )
         }
+        if (confiStep){
+            Dialog(onDismissRequest = { }) {
+                Surface(
+                    shape = RoundedCornerShape(24.dp),
+                    color = SoftSurface,
+                    border = BorderStroke(1.5.dp, SoftBorder),
+                    shadowElevation = 16.dp,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 4.dp)
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.padding(top = 12.dp)
+                    ) {
+                        Text(
+                            text = "Configuration",
+                            fontFamily = Jakarta,
+                            fontSize = 24.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = TextPrimary
+                        )
+                        HiloramaControls(
+                            nailCount = nailCount,
+                            onNailCountChange = { nails ->
+                                nailCount = nails
+                            },
+                            threadCount = threadCount,
+                            onThreadCountChange = { threads ->
+                                threadCount = threads
+                            },
+                            colorMode = colorMode,
+                            onColorModeChange = { channel ->
+                                if (channel > 1 && colorMode <= 1) toDrawBitmap = bitmap
+                                else if (channel <= 1 && colorMode > 1) toDrawBitmap = bitmapToGray(bitmap)
+                                toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
+                                colorMode = channel
+                            },
+                            active = true,
+                            context = context,
+                            borders = false
+                        )
+                        MainButton(
+                            onclick = {
+                                curr0 = -1
+                                curr1 = -1
+                                loadingThreads = true
+                                confiStep = false
+                                nailsToDraw.clear()
+                                lastAssign = System.currentTimeMillis()
+                            },
+                            text = "Create",
+                        )
+                    }
+                }
+            }
+        }
     }
 }
+
