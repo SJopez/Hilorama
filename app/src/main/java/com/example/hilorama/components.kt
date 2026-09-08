@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
@@ -70,12 +71,16 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathFillType
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.Font
@@ -91,7 +96,9 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.zIndex
 import androidx.core.graphics.createBitmap
 import kotlinx.coroutines.delay
+import kotlin.math.cos
 import kotlin.math.min
+import kotlin.math.sin
 import kotlin.text.toInt
 
 val Jakarta = FontFamily(
@@ -1161,5 +1168,236 @@ fun ThreadList(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun NailsDiagram(
+    modifier: Modifier = Modifier,
+    primaryColor: Color = SoftPrimary,
+    textColor: Color = TextPrimary,
+    accentColor: Color = TextSecondary
+) {
+    Canvas(
+        modifier = modifier
+            .fillMaxWidth()
+            .aspectRatio(1f)
+            .padding(horizontal = 20.dp, vertical = 8.dp)
+    ) {
+        val centerPoint = center
+        val radius = size.minDimension / 2f - 20.dp.toPx()
+        val innerArcRadius = radius - 18.dp.toPx()
+        val strokeWidth = 2.dp.toPx()
+
+        drawCircle(
+            color = SoftBorder,
+            radius = radius,
+            center = centerPoint,
+            style = Stroke(width = strokeWidth)
+        )
+
+        val angles = listOf(
+            0f to "0°",
+            270f to "90°",
+            180f to "180°",
+            90f to "270°"
+        )
+
+        val textPaint = android.graphics.Paint().apply {
+            isAntiAlias = true
+            color = textColor.toArgb()
+            textSize = 12.dp.toPx()
+            textAlign = android.graphics.Paint.Align.CENTER
+            isFakeBoldText = true
+        }
+
+        angles.forEach { (angleDeg, label) ->
+            val rad = angleDeg * (Math.PI / 180f)
+            val nailX = centerPoint.x + radius * cos(rad).toFloat()
+            val nailY = centerPoint.y + radius * sin(rad).toFloat()
+
+            drawCircle(
+                color = primaryColor,
+                radius = 5.dp.toPx(),
+                center = Offset(nailX, nailY)
+            )
+
+            val labelRadius = radius + 28.dp.toPx()
+            val labelX = centerPoint.x + labelRadius * cos(rad).toFloat()
+            val labelY = centerPoint.y + labelRadius * sin(rad).toFloat()
+
+            val textBounds = android.graphics.Rect()
+            textPaint.getTextBounds(label, 0, label.length, textBounds)
+            val correctedY = labelY - (textPaint.fontMetrics.ascent + textPaint.fontMetrics.descent) / 2f
+
+            drawContext.canvas.nativeCanvas.drawText(
+                label,
+                labelX,
+                correctedY,
+                textPaint
+            )
+        }
+
+        val startAngle = 30f
+        val sweepAngle = -60f
+        val endAngleDeg = startAngle + sweepAngle
+
+        drawArc(
+            color = accentColor,
+            startAngle = startAngle,
+            sweepAngle = sweepAngle,
+            useCenter = false,
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round),
+            topLeft = Offset(centerPoint.x - innerArcRadius, centerPoint.y - innerArcRadius),
+            size = Size(innerArcRadius * 2, innerArcRadius * 2)
+        )
+
+        val endRad = endAngleDeg * (Math.PI / 180f)
+        val tipX = centerPoint.x + innerArcRadius * cos(endRad).toFloat()
+        val tipY = centerPoint.y + innerArcRadius * sin(endRad).toFloat()
+
+        val tangentAngle = endRad - (Math.PI / 2)
+        val arrowLength = 8.dp.toPx()
+        val arrowWingAngle = 25f * (Math.PI / 180f)
+
+        val leftWingX = tipX - arrowLength * cos(tangentAngle - arrowWingAngle).toFloat()
+        val leftWingY = tipY - arrowLength * sin(tangentAngle - arrowWingAngle).toFloat()
+
+        val rightWingX = tipX - arrowLength * cos(tangentAngle + arrowWingAngle).toFloat()
+        val rightWingY = tipY - arrowLength * sin(tangentAngle + arrowWingAngle).toFloat()
+
+        val arrowPath = Path().apply {
+            moveTo(leftWingX, leftWingY)
+            lineTo(tipX, tipY)
+            lineTo(rightWingX, rightWingY)
+        }
+
+        drawPath(
+            path = arrowPath,
+            color = accentColor,
+            style = Stroke(width = 2.dp.toPx(), cap = StrokeCap.Round)
+        )
+    }
+}
+@Composable
+fun ThreadStepHelpDialog(
+    onDismissRequest: () -> Unit
+) {
+    Dialog(onDismissRequest = onDismissRequest) {
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            shape = RoundedCornerShape(20.dp),
+            colors = CardDefaults.cardColors(
+                containerColor = SoftSurface
+            ),
+            border = BorderStroke(1.dp, SoftBorder),
+            elevation = CardDefaults.cardElevation(
+                defaultElevation = 6.dp
+            )
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 20.dp, start = 20.dp, end = 20.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp)
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(36.dp)
+                            .background(
+                                color = SoftPrimary.copy(alpha = 0.12f),
+                                shape = CircleShape
+                            ),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.help),
+                            contentDescription = null,
+                            tint = SoftPrimary,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    Text(
+                        text = "Instructions",
+                        fontFamily = Jakarta,
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
+                    )
+                }
+                NailsDiagram()
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    InstructionStep(
+                        stepNumber = 1,
+                        description = "Nails are numbered starting at 0° on the left side and counted counter-clockwise around the frame."
+                    )
+
+                    InstructionStep(
+                        stepNumber = 2,
+                        description = "Press the Next Thread button to advance to the next step and continue weaving."
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+                    horizontalArrangement = Arrangement.Center
+                ){
+                    MainButton(
+                        onclick = onDismissRequest,
+                        modifier = Modifier.fillMaxWidth(0.5f),
+                        text = "Got it",
+                        containerColor = SoftPrimary,
+                        contentColor = Color.White
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+private fun InstructionStep(
+    stepNumber: Int,
+    description: String
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.Top
+    ) {
+        Box(
+            modifier = Modifier
+                .size(24.dp)
+                .background(
+                    color = SoftPrimary,
+                    shape = CircleShape
+                ),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stepNumber.toString(),
+                fontFamily = Jakarta,
+                fontSize = 12.sp,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+        }
+
+        Spacer(modifier = Modifier.width(12.dp))
+
+        Text(
+            text = description,
+            fontFamily = Jakarta,
+            fontSize = 14.sp,
+            fontWeight = FontWeight.Normal,
+            color = TextSecondary,
+            lineHeight = 20.sp,
+            modifier = Modifier.weight(1f)
+        )
     }
 }

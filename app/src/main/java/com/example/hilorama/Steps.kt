@@ -117,7 +117,7 @@ fun StepsCore() {
     var currIndex by remember { mutableStateOf(0) }
     var indexToDraw by remember { mutableStateOf(0) }
 
-    var strongChannel = remember(colorMode) {
+    val strongChannel = remember(colorMode) {
         when(colorMode) {
             1 -> listOf(
                 Color.White
@@ -188,6 +188,7 @@ fun StepsCore() {
         }
     }
 
+    var showHelp by remember { mutableStateOf(false) }
     var needToCut by remember { mutableStateOf(true) }
     var confiStep by remember { mutableStateOf(false) }
     var redrawTrigger by remember { mutableStateOf(0) }
@@ -370,16 +371,30 @@ fun StepsCore() {
                         modifier = Modifier.size(20.dp)
                     )
                 }
-                BarIcon(
-                    src = R.drawable.upload,
-                    description = "Upload image",
-                    color = TextPrimary,
-                    onclick = {
-                        launcher.launch("image/*")
-                    },
-                    active = true,
-                    context = context
-                )
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ){
+                    BarIcon(
+                        src = R.drawable.help,
+                        description = "Help menu",
+                        color = TextPrimary,
+                        onclick = {
+                            showHelp = true
+                        },
+                        active = true,
+                        context = context
+                    )
+                    BarIcon(
+                        src = R.drawable.upload,
+                        description = "Upload image",
+                        color = TextPrimary,
+                        onclick = {
+                            launcher.launch("image/*")
+                        },
+                        active = true,
+                        context = context
+                    )
+                }
             }
 
             Box(
@@ -442,7 +457,11 @@ fun StepsCore() {
                     while (i < nails.size) {
                         val x = nails[i]
                         val y = nails[i + 1]
-                        drawCircle(center = Offset(x, y), color = TextPrimary, radius = 1.2f)
+                        drawCircle(
+                            center = Offset(x, y),
+                            color = if (colorMode % 2 == 0) Color.Black else Color.White,
+                            radius = 1.2f
+                        )
 
                         i += 2
                     }
@@ -566,7 +585,14 @@ fun StepsCore() {
                 threadsProg,
                 title = "Creating Threads",
                 {
-                    loadingThreads = false
+
+                }
+            )
+        }
+        if (showHelp){
+            ThreadStepHelpDialog(
+                onDismissRequest = {
+                    showHelp = false
                 }
             )
         }
@@ -602,6 +628,7 @@ fun StepsCore() {
                             onThreadCountChange = { threads ->
                                 threadCount = threads
                             },
+                            threadCountRange = 1000..8000,
                             colorMode = colorMode,
                             onColorModeChange = { channel ->
                                 if (channel > 1 && colorMode <= 1) toDrawBitmap = bitmap
