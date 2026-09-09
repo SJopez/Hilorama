@@ -12,6 +12,7 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.collection.mutableIntListOf
 import androidx.compose.animation.Animatable
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.SizeTransform
@@ -196,7 +197,8 @@ fun Core() {
                 BitmapFactory.decodeStream(stream)
             }
         }
-        needToCut = true
+        if (bitmap != null) needToCut = true
+        else bitmap = croppedBitmap
     }
 
     LaunchedEffect(lastReset) {
@@ -260,22 +262,30 @@ fun Core() {
 
         withContext(Dispatchers.Default) {
             if (colorMode > 1) {
-                HiloramaEngine.drawImage(0, channels.channel0.threads, channels.channel0.channel, nails, croppedBitmap.width,
-                    object : ThreadAdding {
-                        override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 0)
-                    })
-                HiloramaEngine.drawImage(2, channels.channel2.threads, channels.channel2.channel, nails, croppedBitmap.width,
-                    object : ThreadAdding {
-                        override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 2)
-                    })
-                HiloramaEngine.drawImage(3, channels.channel3.threads, channels.channel3.channel, nails, croppedBitmap.width,
-                    object : ThreadAdding {
-                        override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 3)
-                    })
-                HiloramaEngine.drawImage(1, channels.channel1.threads, channels.channel1.channel, nails, croppedBitmap.width,
-                    object : ThreadAdding {
-                        override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 1)
-                    })
+                if (evalChannel(nailsToDraw.size, 0, channels)){
+                    HiloramaEngine.drawImage(0, channels.channel0.threads, channels.channel0.channel, nails, croppedBitmap.width,
+                        object : ThreadAdding {
+                            override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 0)
+                        })
+                }
+                if (evalChannel(nailsToDraw.size, 1, channels)){
+                    HiloramaEngine.drawImage(1, channels.channel1.threads, channels.channel1.channel, nails, croppedBitmap.width,
+                        object : ThreadAdding {
+                            override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 1)
+                        })
+                }
+                if (evalChannel(nailsToDraw.size, 2, channels)){
+                    HiloramaEngine.drawImage(2, channels.channel2.threads, channels.channel2.channel, nails, croppedBitmap.width,
+                        object : ThreadAdding {
+                            override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 2)
+                        })
+                }
+                if (evalChannel(nailsToDraw.size, 3, channels)){
+                    HiloramaEngine.drawImage(3, channels.channel3.threads, channels.channel3.channel, nails, croppedBitmap.width,
+                        object : ThreadAdding {
+                            override fun addThread(nail1: Int, nail2: Int) = paintThread(nail1, nail2, 3)
+                        })
+                }
             } else {
                 HiloramaEngine.drawImage(0, threadCount, grayImage, nails, croppedBitmap.width,
                     object : ThreadAdding {
@@ -328,11 +338,12 @@ fun Core() {
                 bitmap?.let {
                     ImageCutter(
                         bitmap,
-                        (screenWidth - 32).dp,
+                        (screenWidth - 20).dp,
                         assignBitmap = {
-                           assignBitmap(it)
+                            assignBitmap(it)
                         },
                         onCancel = {
+                            pauseCall()
                             needToCut = false
                             bitmap = croppedBitmap
                         }
@@ -538,7 +549,6 @@ fun Core() {
                             color = TextPrimary,
                             onclick = {
                                 pauseCall()
-                                HiloramaEngine.reset()
                                 launcher.launch("image/*")
                             },
                             active = !isGenerating,
@@ -558,7 +568,9 @@ fun Core() {
                             src = R.drawable.replay,
                             description = "Replay draw",
                             color = TextPrimary,
-                            onclick = { replay() },
+                            onclick = {
+                                println(bitmap.width)
+                                replay() },
                             active = !isGenerating,
                             context = context
                         )

@@ -478,3 +478,14 @@ fun NumberCircle(
         paint
     )
 }
+
+fun evalChannel(size: Int, index: Int, channel: Channels): Boolean{
+    val threadPool = listOf(channel.channel0.threads, channel.channel1.threads, channel.channel2.threads, channel.channel3.threads)
+    var sum = 0;
+
+    for (i in 0..index){
+        sum += threadPool[i]
+    }
+
+    return sum > size
+}

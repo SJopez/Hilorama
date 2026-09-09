@@ -310,7 +310,7 @@ fun StepsCore() {
             bitmap?.let {
                 ImageCutter(
                     bitmap,
-                    (screenWidth - 32).dp,
+                    (screenWidth - 20).dp,
                     assignBitmap = {
                         bitmap = it
                         toDrawBitmap = if (colorMode <= 1) bitmapToGray(bitmap) else bitmap

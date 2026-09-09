@@ -8,22 +8,7 @@
 
 #define LOG(...) __android_log_print(ANDROID_LOG_DEBUG, LOG_TAG, __VA_ARGS__)
 
-
 using namespace  std;
-
-string debugArray(float* array, int len){
-    string ans = "[ ";
-
-    for (int i = 0; i < len; i++){
-        ans += to_string(array[i]);
-        ans += ", ";
-    }
-
-    ans.append(" ]");
-
-    return ans;
-}
-
 
 float Bresenham(int x0, int y0, int x1, int y1, int width, float* image, bool nailPicked, int channel){
     bool swapAxis = abs(y0 - y1) > abs(x0 - x1);
@@ -75,7 +60,6 @@ void saveStatus(int channel, int currNail, int prevNail, int currLine){
 
 void HiloramaMain::changeStatus(bool value){
     stop.store(value);
-
 }
 
 void HiloramaMain::reset(){
@@ -99,6 +83,7 @@ void HiloramaMain::drawImage(int channel, int count, float *image, vector<pair<i
     for (int currLines = currLineSave[channel]; currLines < count; currLines++){
         if (stop.load()) {
             if (generation.load() == currGen){
+                LOG("%s", "PAUSADO");
                 saveStatus(channel, currNail, prevNail, currLines);
             }
             return;
@@ -112,6 +97,7 @@ void HiloramaMain::drawImage(int channel, int count, float *image, vector<pair<i
         for (int j = 0; j < nails.size(); j++){
             if (stop.load()) {
                 if (generation.load() == currGen){
+                    LOG("%s", "PAUSADO");
                     saveStatus(channel, currNail, prevNail, currLines);
                 }
                 return;
