@@ -1096,3 +1096,38 @@ private fun InstructionStep(
         )
     }
 }
+
+@Composable
+fun CircularButton(onclick: () -> Unit, description: String, icon: Int, tint: Color = SoftPrimary, modifier: Modifier = Modifier){
+    Box(
+        modifier = modifier
+            .clip(CircleShape)
+            .border(2.dp, SoftPrimary, CircleShape)
+            .clickable {
+                onclick()
+            }
+            .padding(10.dp)
+    ) {
+        Icon(
+            painter = painterResource(id = icon),
+            contentDescription = description,
+            tint = tint,
+            modifier = Modifier.size(20.dp)
+        )
+    }
+}
+
+@Composable
+fun ToolBar(row: @Composable () -> Unit){
+    Surface(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp),
+        shape = RoundedCornerShape(20.dp),
+        color = SoftSurface,
+        border = BorderStroke(1.5.dp, SoftBorder),
+        shadowElevation = 6.dp
+    ) {
+        row()
+    }
+}

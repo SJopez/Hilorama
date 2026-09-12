@@ -189,6 +189,8 @@ fun StepsCore() {
     }
 
     var showHelp by remember { mutableStateOf(false) }
+    var saved by remember { mutableStateOf(false) }
+    var id by remember { mutableStateOf(System.currentTimeMillis()) }
     var needToCut by remember { mutableStateOf(true) }
     var confiStep by remember { mutableStateOf(false) }
     var redrawTrigger by remember { mutableStateOf(0) }
@@ -331,28 +333,20 @@ fun StepsCore() {
                 .fillMaxSize()
                 .displayCutoutPadding()
                 .navigationBarsPadding()
-                .padding(vertical = 8.dp),
+                .padding(vertical = 8.dp)
+            ,
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Box(
-                    modifier = Modifier
-                        .clip(CircleShape)
-                        .then(
-                            if (fadding) {
-                                Modifier.background(SoftPrimary, CircleShape)
-                            } else {
-                                Modifier.border(2.dp, SoftPrimary, CircleShape)
-                            }
-                        )
-                        .clickable {
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                horizontalArrangement = Arrangement.Center
+            ){
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ){
+                    CircularButton(
+                        onclick = {
                             fadding = !fadding
 
                             scope.launch {
@@ -361,38 +355,47 @@ fun StepsCore() {
                                     animationSpec = tween(durationMillis = 400)
                                 )
                             }
-                        }
-                        .padding(10.dp)
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.fade),
-                        contentDescription = "Toggle fade effect",
+                        },
+                        description = "Fade",
+                        icon = R.drawable.fade,
                         tint = if (fadding) Color.White else SoftPrimary,
-                        modifier = Modifier.size(20.dp)
+                        modifier = Modifier.then(
+                            if (fadding) {
+                                Modifier.background(SoftPrimary, CircleShape)
+                            } else {
+                                Modifier.border(2.dp, SoftPrimary, CircleShape)
+                            }
+                        )
                     )
-                }
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ){
-                    BarIcon(
-                        src = R.drawable.help,
-                        description = "Help menu",
-                        color = TextPrimary,
+                    CircularButton(
+                        onclick = {
+                            saved = !saved
+                        },
+                        description = "Add to complete later...",
+                        tint = if (saved) Color.White else SoftPrimary,
+                        icon = if (saved) R.drawable.bookmark_check else R.drawable.bookmark,
+                        modifier = Modifier.then(
+                            if (saved) {
+                                Modifier.background(SoftPrimary, CircleShape)
+                            }
+                            else {
+                                Modifier.border(2.dp, SoftPrimary, CircleShape)
+                            }
+                        )
+                    )
+                    CircularButton(
                         onclick = {
                             showHelp = true
                         },
-                        active = true,
-                        context = context
+                        description = "Throw help menu",
+                        icon = R.drawable.help
                     )
-                    BarIcon(
-                        src = R.drawable.upload,
-                        description = "Upload image",
-                        color = TextPrimary,
+                    CircularButton(
                         onclick = {
                             launcher.launch("image/*")
                         },
-                        active = true,
-                        context = context
+                        description = "Throw image selector",
+                        icon = R.drawable.upload
                     )
                 }
             }

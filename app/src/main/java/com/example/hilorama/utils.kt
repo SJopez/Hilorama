@@ -48,6 +48,10 @@ import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
 
+
+
+
+
 fun cropBitmap(original: Bitmap, width: Int,height: Int, noCut: Boolean = false): Bitmap{
     val image = original.asImageBitmap()
 
