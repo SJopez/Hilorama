@@ -99,22 +99,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 
-interface ThreadAdding {
-    fun addThread(nail1: Int, nail2: Int)
-}
-
-object HiloramaEngine {
-    init {
-        System.loadLibrary("Hilorama")
-    }
-    external fun drawImage(channel: Int, count: Int, image: FloatArray, nails: FloatArray, width: Int, threadAdding: ThreadAdding)
-    external fun changeStatus(value: Boolean)
-    external fun reset()
-}
-
-data class Thread(val nail1: Int, val nail2: Int, val color: Int)
-data class ControlStatus(val nailCount: Int, val threadCount: Int)
-
 
 @Composable
 fun Core() {

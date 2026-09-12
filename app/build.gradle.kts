@@ -1,6 +1,8 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+
 }
 android {
     namespace = "com.example.hilorama"
@@ -49,6 +51,7 @@ android {
 }
 
 dependencies {
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("com.squareup.retrofit2:retrofit:2.11.0")
     implementation(platform(libs.androidx.compose.bom))
     implementation("androidx.media3:media3-transformer:1.11.0")

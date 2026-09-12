@@ -42,15 +42,93 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.StringFormat
 import java.io.File
+import java.io.FileOutputStream
 import kotlin.io.path.Path
 import kotlin.math.cos
 import kotlin.math.roundToInt
 import kotlin.math.sin
+import kotlinx.serialization.encodeToString
+import kotlinx.serialization.json.Json
+
+interface ThreadAdding {
+    fun addThread(nail1: Int, nail2: Int)
+}
+
+object HiloramaEngine {
+    init {
+        System.loadLibrary("Hilorama")
+    }
+    external fun drawImage(channel: Int, count: Int, image: FloatArray, nails: FloatArray, width: Int, threadAdding: ThreadAdding)
+    external fun changeStatus(value: Boolean)
+    external fun reset()
+}
+
+@Serializable
+data class Thread(val nail1: Int, val nail2: Int, val color: Int)
+
+data class ControlStatus(val nailCount: Int, val threadCount: Int)
 
 
+@Serializable
+data class DataStep(
+    val id: Long,
+    val bitmapToDrawPath: String,
+    val accumulatedBitmappath: String,
+    val nailsToDraw: MutableList<Thread>,
+    val index: Int,
+    val nails: Int,
+    val threads: Int,
+    val colorMode: Int
+)
 
+fun saveImageInPrivate(bitmap: Bitmap, name: String, context: Context) {
+    val imageFile = File(context.filesDir, name)
 
+    FileOutputStream(imageFile).use { out ->
+        bitmap.compress(Bitmap.CompressFormat.PNG, 100, out)
+    }
+}
+
+fun saveDataStep(bitmapToDraw: Bitmap,
+                 accumulatedBitmap: Bitmap,
+                 nailsToDraw: MutableList<Thread>,
+                 index: Int,
+                 id: Long,
+                 nailCount: Int,
+                 threadCount: Int,
+                 colorMode: Int,
+                 context: Context) {
+    val btdName = "${id}_BitmapToDraw.png"
+    saveImageInPrivate(
+        bitmap = bitmapToDraw,
+        name = btdName,
+        context = context
+    )
+
+    val acbName = "${id}_AccumulatedBitmap.png"
+    saveImageInPrivate(
+        bitmap = accumulatedBitmap,
+        name = acbName,
+        context = context
+    )
+
+    val data = DataStep (
+        id = id,
+        bitmapToDrawPath = btdName,
+        accumulatedBitmappath = acbName,
+        nailsToDraw = nailsToDraw,
+        index = index,
+        nails = nailCount,
+        threads = threadCount,
+        colorMode = colorMode
+    )
+
+    val jsonString = Json.encodeToString(data)
+    File(context.filesDir, "${id}HILORAMA.json").writeText(jsonString)
+}
 
 fun cropBitmap(original: Bitmap, width: Int,height: Int, noCut: Boolean = false): Bitmap{
     val image = original.asImageBitmap()

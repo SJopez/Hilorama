@@ -9,6 +9,7 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.net.Uri
 import android.os.Build
+import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -304,7 +305,6 @@ fun StepsCore() {
             AndroidCanvas(accumulatedBitmap).drawLine(curr0X, curr0Y, curr1X, curr1Y, channelPaints[color])
         }
     }
-
     Box(
         modifier = Modifier.fillMaxSize()
     ) {
@@ -314,6 +314,7 @@ fun StepsCore() {
                     bitmap,
                     (screenWidth - 20).dp,
                     assignBitmap = {
+                        id = System.currentTimeMillis()
                         bitmap = it
                         toDrawBitmap = if (colorMode <= 1) bitmapToGray(bitmap) else bitmap
                         toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
@@ -369,7 +370,19 @@ fun StepsCore() {
                     )
                     CircularButton(
                         onclick = {
-                            saved = !saved
+                            saved = true
+                            saveDataStep(
+                                toDrawBitmap,
+                                accumulatedBitmap,
+                                nailsToDraw,
+                                currIndex,
+                                id,
+                                nailCount,
+                                threadCount,
+                                colorMode,
+                                context,
+                            )
+                            Toast.makeText(context, "State saved!", Toast.LENGTH_SHORT).show()
                         },
                         description = "Add to complete later...",
                         tint = if (saved) Color.White else SoftPrimary,
