@@ -81,14 +81,15 @@ import androidx.core.graphics.blue
 import androidx.core.graphics.createBitmap
 import androidx.core.graphics.green
 import androidx.core.graphics.red
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 @RequiresApi(Build.VERSION_CODES.O)
-@Preview
 @Composable
-fun StepsCore() {
+fun StepsCore(controller: NavHostController) {
+    var loading by remember { mutableStateOf(true) }
     var fadding by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
     var fadePosition by remember { mutableStateOf(Animatable(-1f)) }
@@ -100,7 +101,7 @@ fun StepsCore() {
     }
     var accumulatedBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
     var stepBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
-    var toDrawBitmap by remember { mutableStateOf(bitmapToGray(bitmap)) }
+    var toDrawBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
     var grayImage by remember { mutableStateOf(floatArrayOf()) }
     var croppedBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
 
@@ -191,7 +192,7 @@ fun StepsCore() {
 
     var showHelp by remember { mutableStateOf(false) }
     var saved by remember { mutableStateOf(false) }
-    var id by remember { mutableStateOf(System.currentTimeMillis()) }
+    var id by remember { mutableStateOf(0L) }
     var needToCut by remember { mutableStateOf(true) }
     var confiStep by remember { mutableStateOf(false) }
     var redrawTrigger by remember { mutableStateOf(0) }
@@ -207,13 +208,21 @@ fun StepsCore() {
         needToCut = true
     }
 
-    var channels by remember { mutableStateOf(imageToCMY(bitmap, threadCount)) }
+    var channels by remember { mutableStateOf(Channels()) }
     var lastAssign by remember { mutableStateOf(0L) }
     var lastCalc by remember { mutableStateOf(0L) }
 
     val backgroundColor = if (colorMode % 2 == 1) AndroidColor.BLACK else AndroidColor.WHITE
     val composeBackgroundColor = if (colorMode % 2 == 1) Color.Black else Color.White
     val canvasContainerSize = (screenWidth - 32).dp
+
+    LaunchedEffect(Unit) {
+        withContext(Dispatchers.Default) {
+            toDrawBitmap = bitmapToGray(bitmap)
+            channels = imageToCMY(bitmap, threadCount)
+            loading = false
+        }
+    }
 
     LaunchedEffect(lastAssign) {
         if (canvasSize == IntSize.Zero || lastAssign == 0L) return@LaunchedEffect
@@ -305,381 +314,394 @@ fun StepsCore() {
             AndroidCanvas(accumulatedBitmap).drawLine(curr0X, curr0Y, curr1X, curr1Y, channelPaints[color])
         }
     }
-    Box(
-        modifier = Modifier.fillMaxSize().background(color = SoftBackground)
-    ) {
-        if (needToCut) {
-            bitmap?.let {
-                ImageCutter(
-                    bitmap,
-                    (screenWidth - 20).dp,
-                    assignBitmap = {
-                        saved = false
-                        id = System.currentTimeMillis()
-                        bitmap = it
-                        toDrawBitmap = if (colorMode <= 1) bitmapToGray(bitmap) else bitmap
-                        toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
 
-                        confiStep = true
-                        needToCut = false
-                    },
-                    onCancel = {
-                        needToCut = false
-                        bitmap = croppedBitmap
-                    }
-                )
-            }
-        }
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .displayCutoutPadding()
-                .navigationBarsPadding()
-                .padding(vertical = 8.dp)
-            ,
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
-                horizontalArrangement = Arrangement.Center
-            ){
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ){
-                    CircularButton(
-                        onclick = {
-                            fadding = !fadding
-
-                            scope.launch {
-                                fadePosition.animateTo(
-                                    targetValue = if (fadding) canvasSize.width / 2f else canvasSize.width.toFloat(),
-                                    animationSpec = tween(durationMillis = 400)
-                                )
-                            }
-                        },
-                        description = "Fade",
-                        icon = R.drawable.fade,
-                        tint = if (fadding) Color.White else SoftPrimary,
-                        modifier = Modifier.then(
-                            if (fadding) {
-                                Modifier.background(SoftPrimary, CircleShape)
-                            } else {
-                                Modifier.border(2.dp, SoftPrimary, CircleShape)
-                            }
-                        )
-                    )
-                    var lapse by remember { mutableStateOf(false) }
-
-                    CircularButton(
-                        onclick = {
-                            if (!lapse) {
-                                lapse = true
-                                scope.launch {
-                                    saveDataStep(
-                                        toDrawBitmap,
-                                        accumulatedBitmap,
-                                        nailsToDraw,
-                                        currIndex,
-                                        id,
-                                        nailCount,
-                                        threadCount,
-                                        colorMode,
-                                        context
-                                    )
-                                }
-                                saved = true
-                                lapse = false
-                                Toast.makeText(context, "✅ Bookmark saved!", Toast.LENGTH_SHORT).show()
-                            }
-                        },
-                        description = "Add to complete later...",
-                        tint = if (saved) Color.White else SoftPrimary,
-                        icon = if (saved) R.drawable.bookmark_check else R.drawable.bookmark,
-                        modifier = Modifier.then(
-                            if (saved) {
-                                Modifier.background(SoftPrimary, CircleShape)
-                            }
-                            else {
-                                Modifier.border(2.dp, SoftPrimary, CircleShape)
-                            }
-                        )
-                    )
-                    CircularButton(
-                        onclick = {
-                            showHelp = true
-                        },
-                        description = "Throw help menu",
-                        icon = R.drawable.help
-                    )
-                    CircularButton(
-                        onclick = {
-                            launcher.launch("image/*")
-                        },
-                        description = "Throw image selector",
-                        icon = R.drawable.upload
-                    )
-                }
-            }
-
+    androidx.compose.animation.Crossfade(
+        targetState = loading,
+        animationSpec = tween(durationMillis = 400),
+        label = "StepsCoreLoadingCrossfade"
+    ) { isLoading ->
+        if (isLoading) {
+            LoadingScreen()
+        } else {
             Box(
-                modifier = Modifier
-                    .size(canvasContainerSize),
-                contentAlignment = Alignment.Center
+                modifier = Modifier.fillMaxSize().background(color = SoftBackground)
             ) {
-                Canvas(
+                if (needToCut) {
+                    bitmap?.let {
+                        ImageCutter(
+                            bitmap,
+                            (screenWidth - 20).dp,
+                            assignBitmap = {
+                                saved = false
+                                id = System.currentTimeMillis()
+                                bitmap = it
+                                toDrawBitmap = if (colorMode <= 1) bitmapToGray(bitmap) else bitmap
+                                toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
+
+                                confiStep = true
+                                needToCut = false
+                            },
+                            onCancel = {
+                                if (id == 0L){
+                                   controller.navigate(Screens.Menu.route)
+                                }
+                                else {
+                                    needToCut = false
+                                    bitmap = croppedBitmap
+                                }
+                            }
+                        )
+                    }
+                }
+                Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .onSizeChanged { size ->
-                            canvasSize = size
-                            nails = getNails(size.width / 2 - 20f, 20, nailCount)
-                            scope.launch { fadePosition.snapTo(size.width - 10f) }
-                        }
-                        .zIndex(0f)
-                        .pointerInput(Unit) {
-                            detectTransformGestures { _, pan, _, _ ->
-                                if (fadePosition.value + pan.x in 10f..size.width.toFloat() - 10f && fadding) {
-                                    scope.launch { fadePosition.snapTo(fadePosition.value + pan.x) }
-                                }
-                            }
-                        }
+                        .displayCutoutPadding()
+                        .navigationBarsPadding()
+                        .padding(vertical = 8.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    redrawTrigger
+                    Row(
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                        horizontalArrangement = Arrangement.Center
+                    ){
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ){
+                            CircularButton(
+                                onclick = {
+                                    fadding = !fadding
 
-                    drawCircle(
-                        center = Offset(center.x, center.y),
-                        radius = size.width / 2f - 20f,
-                        color = composeBackgroundColor,
-                    )
+                                    scope.launch {
+                                        fadePosition.animateTo(
+                                            targetValue = if (fadding) canvasSize.width / 2f else canvasSize.width.toFloat(),
+                                            animationSpec = tween(durationMillis = 400)
+                                        )
+                                    }
+                                },
+                                description = "Fade",
+                                icon = R.drawable.fade,
+                                tint = if (fadding) Color.White else SoftPrimary,
+                                modifier = Modifier.then(
+                                    if (fadding) {
+                                        Modifier.background(SoftPrimary, CircleShape)
+                                    } else {
+                                        Modifier.border(2.dp, SoftPrimary, CircleShape)
+                                    }
+                                )
+                            )
+                            var lapse by remember { mutableStateOf(false) }
 
-                    val radiusPx = size.width / 2 - 20f
-                    val left = center.x - radiusPx
-                    val top = center.y - radiusPx
-                    val right = center.x + radiusPx
-                    val bottom = center.y + radiusPx
-
-                    val ovalPath = Path().apply { addOval(Rect(left, top, right, bottom)) }
-
-                    val rightHalfRect = Path().apply {
-                        addRect(Rect(Offset(fadePosition.value, 0f), Size(size.width, size.height)))
-                    }
-                    val circleRightHalf = Path().apply {
-                        op(rightHalfRect, ovalPath, PathOperation.Intersect)
-                    }
-
-                    clipPath(ovalPath) {
-                        drawImage(
-                            image = accumulatedBitmap.asImageBitmap(),
-                            dstSize = IntSize(size.width.toInt(), size.height.toInt())
-                        )
-                    }
-
-                    clipPath(circleRightHalf) {
-                        drawImage(image = toDrawBitmap.asImageBitmap())
-                    }
-
-                    var i = 0
-                    while (i < nails.size) {
-                        val x = nails[i]
-                        val y = nails[i + 1]
-                        drawCircle(
-                            center = Offset(x, y),
-                            color = if (colorMode % 2 == 0) Color.Black else Color.White,
-                            radius = 1.2f
-                        )
-
-                        i += 2
-                    }
-
-                    if (curr0 >= 0 && curr1 >= 0 && nailsToDraw.size > 0){
-                        val curr0X = nails[2 * curr0]
-                        val curr0Y = nails[2 * curr0 + 1]
-                        val curr1X = nails[2 * curr1]
-                        val curr1Y = nails[2 * curr1 + 1]
-                        val colorIndex = nailsToDraw[currIndex].color
-
-                        val lineBg = Paint().apply {
-                            color = backgroundColor;
-                            strokeWidth = 6f;
+                            CircularButton(
+                                onclick = {
+                                    if (!lapse) {
+                                        lapse = true
+                                        scope.launch {
+                                            saveDataStep(
+                                                toDrawBitmap,
+                                                accumulatedBitmap,
+                                                nailsToDraw,
+                                                currIndex,
+                                                id,
+                                                nailCount,
+                                                threadCount,
+                                                colorMode,
+                                                context
+                                            )
+                                        }
+                                        saved = true
+                                        lapse = false
+                                        Toast.makeText(context, "✅ Bookmark saved!", Toast.LENGTH_SHORT).show()
+                                    }
+                                },
+                                description = "Add to complete later...",
+                                tint = if (saved) Color.White else SoftPrimary,
+                                icon = if (saved) R.drawable.bookmark_check else R.drawable.bookmark,
+                                modifier = Modifier.then(
+                                    if (saved) {
+                                        Modifier.background(SoftPrimary, CircleShape)
+                                    }
+                                    else {
+                                        Modifier.border(2.dp, SoftPrimary, CircleShape)
+                                    }
+                                )
+                            )
+                            CircularButton(
+                                onclick = {
+                                    showHelp = true
+                                },
+                                description = "Throw help menu",
+                                icon = R.drawable.help
+                            )
+                            CircularButton(
+                                onclick = {
+                                    launcher.launch("image/*")
+                                },
+                                description = "Throw image selector",
+                                icon = R.drawable.upload
+                            )
                         }
-
-                        val lineStroke = Paint().apply {
-                            color = strongChannel[colorIndex].toArgb();
-                            strokeWidth = 3f;
-                            xfermode = channelPaints[colorIndex].xfermode
-                        }
-
-                        drawContext.canvas.nativeCanvas.drawLine(
-                            curr0X, curr0Y, curr1X, curr1Y, lineBg
-                        )
-
-                        drawContext.canvas.nativeCanvas.drawLine(
-                            curr0X, curr0Y, curr1X, curr1Y, lineStroke
-                        )
-
-                        NumberCircle(
-                            number = curr0,
-                            center = Offset(curr0X, curr0Y),
-                            radius = 24f,
-                            canvas = this,
-                            drawContext = drawContext
-                        )
-
-                        NumberCircle(
-                            number = curr1,
-                            center = Offset(curr1X, curr1Y),
-                            radius = 24f,
-                            canvas = this,
-                            drawContext = drawContext
-                        )
                     }
 
-                }
-            }
-
-            val listState = rememberLazyListState()
-
-            LaunchedEffect(indexToDraw) {
-                listState.animateScrollToItem(indexToDraw)
-            }
-
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(SoftBackground)
-                    .padding(horizontal = 16.dp)
-                    .navigationBarsPadding(),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
-            ) {
-                Surface(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
-                        .shadow(
-                            elevation = 4.dp,
-                            shape = RoundedCornerShape(20.dp),
-                            clip = false
-                        ),
-                    shape = RoundedCornerShape(20.dp),
-                    color = SoftSurface,
-                    border = BorderStroke(1.dp, SoftBorder)
-                ) {
                     Box(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .padding(6.dp)
+                            .size(canvasContainerSize),
+                        contentAlignment = Alignment.Center
                     ) {
-                        ThreadList(
-                            indexToDraw = indexToDraw,
-                            nailsToDraw = nailsToDraw,
-                            current = currIndex,
-                            onSelect = { index ->
-                                currIndex = index
-                                selectThread(currIndex)
-                            },
-                            modifier = Modifier.fillMaxSize(),
-                            state = listState,
-                            channel = strongChannel,
-                        )
-                    }
-                }
+                        Canvas(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .onSizeChanged { size ->
+                                    canvasSize = size
+                                    nails = getNails(size.width / 2 - 20f, 20, nailCount)
+                                    scope.launch { fadePosition.snapTo(size.width - 10f) }
+                                }
+                                .zIndex(0f)
+                                .pointerInput(Unit) {
+                                    detectTransformGestures { _, pan, _, _ ->
+                                        if (fadePosition.value + pan.x in 10f..size.width.toFloat() - 10f && fadding) {
+                                            scope.launch { fadePosition.snapTo(fadePosition.value + pan.x) }
+                                        }
+                                    }
+                                }
+                        ) {
+                            redrawTrigger
 
-                BottomNavigationRow(
-                    onNextClick = {
-                        if (indexToDraw + 2 < nailsToDraw.size){
-                            indexToDraw += 1
-                            currIndex = indexToDraw
-                            selectThread(currIndex, true)
+                            drawCircle(
+                                center = Offset(center.x, center.y),
+                                radius = size.width / 2f - 20f,
+                                color = composeBackgroundColor,
+                            )
+
+                            val radiusPx = size.width / 2 - 20f
+                            val left = center.x - radiusPx
+                            val top = center.y - radiusPx
+                            val right = center.x + radiusPx
+                            val bottom = center.y + radiusPx
+
+                            val ovalPath = Path().apply { addOval(Rect(left, top, right, bottom)) }
+
+                            val rightHalfRect = Path().apply {
+                                addRect(Rect(Offset(fadePosition.value, 0f), Size(size.width, size.height)))
+                            }
+                            val circleRightHalf = Path().apply {
+                                op(rightHalfRect, ovalPath, PathOperation.Intersect)
+                            }
+
+                            clipPath(ovalPath) {
+                                drawImage(
+                                    image = accumulatedBitmap.asImageBitmap(),
+                                    dstSize = IntSize(size.width.toInt(), size.height.toInt())
+                                )
+                            }
+
+                            clipPath(circleRightHalf) {
+                                drawImage(image = toDrawBitmap.asImageBitmap())
+                            }
+
+                            var i = 0
+                            while (i < nails.size) {
+                                val x = nails[i]
+                                val y = nails[i + 1]
+                                drawCircle(
+                                    center = Offset(x, y),
+                                    color = if (colorMode % 2 == 0) Color.Black else Color.White,
+                                    radius = 1.2f
+                                )
+
+                                i += 2
+                            }
+
+                            if (curr0 >= 0 && curr1 >= 0 && nailsToDraw.size > 0){
+                                val curr0X = nails[2 * curr0]
+                                val curr0Y = nails[2 * curr0 + 1]
+                                val curr1X = nails[2 * curr1]
+                                val curr1Y = nails[2 * curr1 + 1]
+                                val colorIndex = nailsToDraw[currIndex].color
+
+                                val lineBg = Paint().apply {
+                                    color = backgroundColor;
+                                    strokeWidth = 6f;
+                                }
+
+                                val lineStroke = Paint().apply {
+                                    color = strongChannel[colorIndex].toArgb();
+                                    strokeWidth = 3f;
+                                    xfermode = channelPaints[colorIndex].xfermode
+                                }
+
+                                drawContext.canvas.nativeCanvas.drawLine(
+                                    curr0X, curr0Y, curr1X, curr1Y, lineBg
+                                )
+
+                                drawContext.canvas.nativeCanvas.drawLine(
+                                    curr0X, curr0Y, curr1X, curr1Y, lineStroke
+                                )
+
+                                NumberCircle(
+                                    number = curr0,
+                                    center = Offset(curr0X, curr0Y),
+                                    radius = 24f,
+                                    canvas = this,
+                                    drawContext = drawContext
+                                )
+
+                                NumberCircle(
+                                    number = curr1,
+                                    center = Offset(curr1X, curr1Y),
+                                    radius = 24f,
+                                    canvas = this,
+                                    drawContext = drawContext
+                                )
+                            }
                         }
                     }
-                )
-            }
-        }
 
-        LaunchedEffect(threadsProg) {
-            if (nailsToDraw.size == realThreadCount) {
-                loadingThreads = false
-                indexToDraw = 0
-                currIndex = 0
-                selectThread(0, true)
-            }
-        }
+                    val listState = rememberLazyListState()
 
-        if (loadingThreads){
-            ExportProgressDialog(
-                threadsProg,
-                title = "Creating Threads",
-                {
+                    LaunchedEffect(indexToDraw) {
+                        listState.animateScrollToItem(indexToDraw)
+                    }
 
-                }
-            )
-        }
-        if (showHelp){
-            ThreadStepHelpDialog(
-                onDismissRequest = {
-                    showHelp = false
-                }
-            )
-        }
-        if (confiStep){
-            Dialog(onDismissRequest = { }) {
-                Surface(
-                    shape = RoundedCornerShape(24.dp),
-                    color = SoftSurface,
-                    border = BorderStroke(1.5.dp, SoftBorder),
-                    shadowElevation = 16.dp,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 4.dp)
-                ) {
                     Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(top = 12.dp)
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(SoftBackground)
+                            .padding(horizontal = 16.dp)
+                            .navigationBarsPadding(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Text(
-                            text = "Configuration",
-                            fontFamily = Jakarta,
-                            fontSize = 24.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = TextPrimary
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .weight(1f)
+                                .shadow(
+                                    elevation = 4.dp,
+                                    shape = RoundedCornerShape(20.dp),
+                                    clip = false
+                                ),
+                            shape = RoundedCornerShape(20.dp),
+                            color = SoftSurface,
+                            border = BorderStroke(1.dp, SoftBorder)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .padding(6.dp)
+                            ) {
+                                ThreadList(
+                                    indexToDraw = indexToDraw,
+                                    nailsToDraw = nailsToDraw,
+                                    current = currIndex,
+                                    onSelect = { index ->
+                                        currIndex = index
+                                        selectThread(currIndex)
+                                    },
+                                    modifier = Modifier.fillMaxSize(),
+                                    state = listState,
+                                    channel = strongChannel,
+                                )
+                            }
+                        }
+
+                        BottomNavigationRow(
+                            onNextClick = {
+                                if (indexToDraw + 2 < nailsToDraw.size){
+                                    indexToDraw += 1
+                                    currIndex = indexToDraw
+                                    selectThread(currIndex, true)
+                                }
+                            }
                         )
-                        HiloramaControls(
-                            nailCount = nailCount,
-                            onNailCountChange = { nails ->
-                                nailCount = nails
-                            },
-                            threadCount = threadCount,
-                            onThreadCountChange = { threads ->
-                                threadCount = threads
-                            },
-                            threadCountRange = 1000..8000,
-                            colorMode = colorMode,
-                            onColorModeChange = { channel ->
-                                if (channel > 1 && colorMode <= 1) toDrawBitmap = bitmap
-                                else if (channel <= 1 && colorMode > 1) toDrawBitmap = bitmapToGray(bitmap)
-                                toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
-                                colorMode = channel
-                            },
-                            active = true,
-                            context = context,
-                            borders = false
-                        )
-                        MainButton(
-                            onclick = {
-                                curr0 = -1
-                                curr1 = -1
-                                loadingThreads = true
-                                confiStep = false
-                                nailsToDraw.clear()
-                                lastAssign = System.currentTimeMillis()
-                            },
-                            text = "Create",
-                        )
+                    }
+                }
+
+                LaunchedEffect(threadsProg) {
+                    if (nailsToDraw.size == realThreadCount) {
+                        loadingThreads = false
+                        indexToDraw = 0
+                        currIndex = 0
+                        selectThread(0, true)
+                    }
+                }
+
+                if (loadingThreads){
+                    ExportProgressDialog(
+                        threadsProg,
+                        title = "Creating Threads",
+                        {
+
+                        }
+                    )
+                }
+                if (showHelp){
+                    ThreadStepHelpDialog(
+                        onDismissRequest = {
+                            showHelp = false
+                        }
+                    )
+                }
+                if (confiStep){
+                    Dialog(onDismissRequest = { }) {
+                        Surface(
+                            shape = RoundedCornerShape(24.dp),
+                            color = SoftSurface,
+                            border = BorderStroke(1.5.dp, SoftBorder),
+                            shadowElevation = 16.dp,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 4.dp)
+                        ) {
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(top = 12.dp)
+                            ) {
+                                Text(
+                                    text = "Configuration",
+                                    fontFamily = Jakarta,
+                                    fontSize = 24.sp,
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
+                                )
+                                HiloramaControls(
+                                    nailCount = nailCount,
+                                    onNailCountChange = { nails ->
+                                        nailCount = nails
+                                    },
+                                    threadCount = threadCount,
+                                    onThreadCountChange = { threads ->
+                                        threadCount = threads
+                                    },
+                                    threadCountRange = 1000..8000,
+                                    colorMode = colorMode,
+                                    onColorModeChange = { channel ->
+                                        if (channel > 1 && colorMode <= 1) toDrawBitmap = bitmap
+                                        else if (channel <= 1 && colorMode > 1) toDrawBitmap = bitmapToGray(bitmap)
+                                        toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
+                                        colorMode = channel
+                                    },
+                                    active = true,
+                                    context = context,
+                                    borders = false
+                                )
+                                MainButton(
+                                    onclick = {
+                                        curr0 = -1
+                                        curr1 = -1
+                                        loadingThreads = true
+                                        confiStep = false
+                                        nailsToDraw.clear()
+                                        lastAssign = System.currentTimeMillis()
+                                    },
+                                    text = "Create",
+                                )
+                            }
+                        }
                     }
                 }
             }
         }
     }
 }
-

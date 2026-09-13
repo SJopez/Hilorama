@@ -3,6 +3,7 @@ package com.example.hilorama
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
+import androidx.compose.animation.Crossfade
 import android.graphics.Canvas as AndroidCanvas
 import android.graphics.Color as AndroidColor
 import android.graphics.Paint
@@ -95,6 +96,7 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import androidx.compose.ui.window.Dialog
 import androidx.core.graphics.createBitmap
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -102,9 +104,8 @@ import kotlinx.coroutines.withContext
 import java.util.concurrent.atomic.AtomicInteger
 
 
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun Core() {
+fun Core(controller: NavHostController) {
     var loading by remember { mutableStateOf(true) }
     val screenWidth = LocalConfiguration.current.screenWidthDp
     val context = LocalContext.current
@@ -332,376 +333,387 @@ fun Core() {
 
     val progress = nailsToDraw.size.toFloat() / realThreadCount
 
-    if (loading) {
-        LoadingScreen()
-    } else {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = SoftBackground
-        ) {
-            Box(modifier = Modifier.fillMaxSize()) {
-                if (needToCut) {
-                    ImageCutter(
-                        bitmap,
-                        (screenWidth - 20).dp,
-                        assignBitmap = { assignBitmap(it) },
-                        onCancel = {
-                            pauseCall()
-                            needToCut = false
-                            bitmap = croppedBitmap
-                        }
-                    )
-                }
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .displayCutoutPadding()
-                        .navigationBarsPadding()
-                        .padding(vertical = 8.dp)
-                        .verticalScroll(rememberScrollState()),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.SpaceEvenly
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .clip(CircleShape)
-                                .then(
-                                    if (fadding) {
-                                        Modifier.background(SoftPrimary, CircleShape)
-                                    } else {
-                                        Modifier.border(2.dp, SoftPrimary, CircleShape)
-                                    }
-                                )
-                                .clickable {
-                                    fadding = !fadding
-                                    scope.launch {
-                                        fadePosition.animateTo(
-                                            targetValue = if (fadding) canvasSize.width / 2f else canvasSize.width.toFloat(),
-                                            animationSpec = tween(durationMillis = 400)
-                                        )
-                                    }
+    Crossfade(
+        targetState = loading,
+        animationSpec = tween(durationMillis = 400),
+        label = "CoreLoadingCrossfade"
+    ) { isLoading ->
+        if (isLoading) {
+            LoadingScreen()
+        } else {
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = SoftBackground
+            ) {
+                Box(modifier = Modifier.fillMaxSize()) {
+                    if (needToCut) {
+                        ImageCutter(
+                            bitmap,
+                            (screenWidth - 20).dp,
+                            assignBitmap = { assignBitmap(it) },
+                            onCancel = {
+                                if (lastPlay == 0L){
+                                    controller.navigate(Screens.Menu.route)
                                 }
-                                .padding(10.dp)
-                        ) {
-                            Icon(
-                                painter = painterResource(id = R.drawable.fade),
-                                contentDescription = "Toggle fade effect",
-                                tint = if (fadding) Color.White else SoftPrimary,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-
-                        Box(
-                            modifier = Modifier
-                                .shadow(10.dp, RoundedCornerShape(16.dp), spotColor = SoftPrimary.copy(alpha = 0.5f))
-                                .background(
-                                    brush = Brush.horizontalGradient(
-                                        colors = listOf(SoftPrimary, Color(0xFF6366F1))
-                                    ),
-                                    shape = RoundedCornerShape(16.dp)
-                                )
-                                .clickable {
+                                else {
                                     pauseCall()
-                                    showAiDialog = true
+                                    needToCut = false
+                                    bitmap = croppedBitmap
                                 }
-                                .padding(horizontal = 18.dp, vertical = 10.dp)
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.spacedBy(8.dp)
-                            ) {
-                                Icon(
-                                    painter = painterResource(id = R.drawable.magic),
-                                    contentDescription = "Use AI",
-                                    tint = Color.White,
-                                    modifier = Modifier.size(20.dp)
-                                )
-                                Text(
-                                    text = "Use AI",
-                                    color = Color.White,
-                                    fontSize = 15.sp,
-                                    fontWeight = FontWeight.Bold
-                                )
                             }
-                        }
-                    }
-
-                    val canvasContainerSize = (screenWidth - 32).dp
-
-                    Box(
-                        modifier = Modifier
-                            .size(canvasContainerSize)
-                            .shadow(16.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.12f))
-                            .clip(CircleShape)
-                            .background(SoftSurface)
-                            .border(1.5.dp, SoftBorder, CircleShape),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        if (nailsToDraw.size + 8 < realThreadCount && progress != 0f) {
-                            CircularProgressIndicator(
-                                progress = { progress },
-                                color = SoftPrimary,
-                                trackColor = Color(0xFFE2E8F0),
-                                strokeWidth = 3.dp,
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .zIndex(1f)
-                            )
-                        }
-                        AiGenerationPlaceholder(
-                            isGenerating,
-                            canvasContainerSize,
-                            cancel = { isGenerating = false }
                         )
-
-                        Canvas(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .clipToBounds()
-                                .onSizeChanged { size ->
-                                    canvasSize = size
-                                    scope.launch { fadePosition.snapTo(size.width - 10f) }
-                                }
-                                .zIndex(0f)
-                                .drawWithContent {
-                                    layer.record { this@drawWithContent.drawContent() }
-                                    drawContent()
-                                }
-                                .pointerInput(Unit) {
-                                    detectTransformGestures { _, pan, _, _ ->
-                                        if (fadePosition.value + pan.x in 10f..size.width.toFloat() - 10f && fadding) {
-                                            scope.launch { fadePosition.snapTo(fadePosition.value + pan.x) }
-                                        }
-                                    }
-                                }
-                        ) {
-                            redrawTrigger
-
-                            drawCircle(
-                                center = Offset(center.x, center.y),
-                                radius = size.width / 2f - 20f,
-                                color = composeBackgroundColor
-                            )
-
-                            val radiusPx = size.width / 2 - 20f
-                            val left = center.x - radiusPx
-                            val top = center.y - radiusPx
-                            val right = center.x + radiusPx
-                            val bottom = center.y + radiusPx
-
-                            val ovalPath = Path().apply { addOval(Rect(left, top, right, bottom)) }
-
-                            val rightHalfRect = Path().apply {
-                                addRect(Rect(Offset(fadePosition.value, 0f), Size(size.width, size.height)))
-                            }
-                            val circleRightHalf = Path().apply {
-                                op(rightHalfRect, ovalPath, PathOperation.Intersect)
-                            }
-
-                            clipPath(ovalPath) {
-                                drawImage(
-                                    image = accumulatedBitmap.asImageBitmap(),
-                                    dstSize = IntSize(size.width.toInt(), size.height.toInt())
-                                )
-                            }
-
-                            clipPath(circleRightHalf) {
-                                drawImage(image = toDrawBitmap.asImageBitmap())
-                            }
-
-                            var i = 0
-                            while (i < nails.size) {
-                                val x = nails[i]
-                                val y = nails[i + 1]
-                                drawCircle(center = Offset(x, y), color = TextPrimary, radius = 1.2f)
-                                i += 2
-                            }
-                        }
                     }
-
-                    Surface(
+                    Column(
                         modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        shape = RoundedCornerShape(20.dp),
-                        color = SoftSurface,
-                        border = BorderStroke(1.5.dp, SoftBorder),
-                        shadowElevation = 6.dp
+                            .fillMaxSize()
+                            .displayCutoutPadding()
+                            .navigationBarsPadding()
+                            .padding(vertical = 8.dp)
+                            .verticalScroll(rememberScrollState()),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.SpaceEvenly
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
-                            horizontalArrangement = Arrangement.SpaceEvenly,
+                                .padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            BarIcon(
-                                src = R.drawable.upload,
-                                description = "Upload image",
-                                color = TextPrimary,
-                                onclick = {
-                                    pauseCall()
-                                    launcher.launch("image/*")
-                                },
-                                active = !isGenerating,
-                                context = context
-                            )
-                            BarIcon(
-                                src = if (isPlaying) R.drawable.pause else R.drawable.play,
-                                description = "Stop or Start",
-                                isHighlighted = true,
-                                onclick = {
-                                    if (isPlaying) pauseCall() else if (nailsToDraw.size < threadCount) playCall()
-                                },
-                                active = !isGenerating,
-                                context = context
-                            )
-                            BarIcon(
-                                src = R.drawable.replay,
-                                description = "Replay draw",
-                                color = TextPrimary,
-                                onclick = { replay() },
-                                active = !isGenerating,
-                                context = context
-                            )
-                            BarIcon(
-                                src = R.drawable.save,
-                                description = "Export hilorama",
-                                color = TextPrimary,
-                                onclick = { showExportDialog = true },
-                                active = !isGenerating,
-                                context = context
-                            )
-                            BarIcon(
-                                src = R.drawable.share,
-                                description = "Share hilorama",
-                                color = TextPrimary,
-                                onclick = {
-                                    makeCapture(
-                                        scope = scope,
-                                        capture = layer,
-                                        name = "${System.currentTimeMillis()}",
-                                        context = context,
-                                        code = { result ->
-                                            if (result != 1) {
-                                                Toast.makeText(context, "Error sharing the image", Toast.LENGTH_SHORT).show()
-                                            }
-                                        },
-                                        share = true,
-                                        shareFunction = { uri ->
-                                            val intent = Intent(Intent.ACTION_SEND).apply {
-                                                putExtra(Intent.EXTRA_STREAM, uri)
-                                                type = "image/png"
-                                                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                                            }
-                                            context.startActivity(Intent.createChooser(intent, "Share with..."))
+                            Box(
+                                modifier = Modifier
+                                    .clip(CircleShape)
+                                    .then(
+                                        if (fadding) {
+                                            Modifier.background(SoftPrimary, CircleShape)
+                                        } else {
+                                            Modifier.border(2.dp, SoftPrimary, CircleShape)
                                         }
                                     )
-                                },
-                                active = !isGenerating,
-                                context = context
-                            )
-                        }
-                    }
+                                    .clickable {
+                                        fadding = !fadding
+                                        scope.launch {
+                                            fadePosition.animateTo(
+                                                targetValue = if (fadding) canvasSize.width / 2f else canvasSize.width.toFloat(),
+                                                animationSpec = tween(durationMillis = 400)
+                                            )
+                                        }
+                                    }
+                                    .padding(10.dp)
+                            ) {
+                                Icon(
+                                    painter = painterResource(id = R.drawable.fade),
+                                    contentDescription = "Toggle fade effect",
+                                    tint = if (fadding) Color.White else SoftPrimary,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
 
-                    HiloramaControls(
-                        nailCount = nailCount,
-                        onNailCountChange = { nails ->
-                            pauseCall()
-                            nailCount = nails
-                            controls[colorMode] = ControlStatus(nailCount, threadCount)
-                            replay(false)
-                        },
-                        threadCount = threadCount,
-                        onThreadCountChange = { threads ->
-                            pauseCall()
-                            threadCount = threads
-                            controls[colorMode] = ControlStatus(nailCount, threadCount)
-                            replay(false)
-                        },
-                        colorMode = colorMode,
-                        onColorModeChange = { channel ->
-                            pauseCall()
-                            if (channel > 1 && colorMode <= 1) toDrawBitmap = bitmap
-                            else if (channel <= 1 && colorMode > 1) toDrawBitmap = bitmapToGray(bitmap)
-                            toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
-                            colorMode = channel
-                            nailCount = controls[colorMode].nailCount
-                            threadCount = controls[colorMode].threadCount
-                            replay()
-                        },
-                        active = !isGenerating,
-                        context = context
-                    )
-                }
-
-                if (showExportDialog) {
-                    ExportOptionDialog(
-                        onDismissRequest = { showExportDialog = false },
-                        onExportImage = {
-                            showExportDialog = false
-                            makeCapture(
-                                scope = scope,
-                                capture = layer,
-                                name = "hilorama_${System.currentTimeMillis()}",
-                                context = context,
-                                code = { result ->
-                                    val message = if (result == 1) "✅ Saved correctly!" else "❌ Error saving the image"
-                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                            Box(
+                                modifier = Modifier
+                                    .shadow(10.dp, RoundedCornerShape(16.dp), spotColor = SoftPrimary.copy(alpha = 0.5f))
+                                    .background(
+                                        brush = Brush.horizontalGradient(
+                                            colors = listOf(SoftPrimary, Color(0xFF6366F1))
+                                        ),
+                                        shape = RoundedCornerShape(16.dp)
+                                    )
+                                    .clickable {
+                                        pauseCall()
+                                        showAiDialog = true
+                                    }
+                                    .padding(horizontal = 18.dp, vertical = 10.dp)
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.magic),
+                                        contentDescription = "Use AI",
+                                        tint = Color.White,
+                                        modifier = Modifier.size(20.dp)
+                                    )
+                                    Text(
+                                        text = "Use AI",
+                                        color = Color.White,
+                                        fontSize = 15.sp,
+                                        fontWeight = FontWeight.Bold
+                                    )
                                 }
+                            }
+                        }
+
+                        val canvasContainerSize = (screenWidth - 32).dp
+
+                        Box(
+                            modifier = Modifier
+                                .size(canvasContainerSize)
+                                .shadow(16.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.12f))
+                                .clip(CircleShape)
+                                .background(SoftSurface)
+                                .border(1.5.dp, SoftBorder, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            if (nailsToDraw.size + 8 < realThreadCount && progress != 0f) {
+                                CircularProgressIndicator(
+                                    progress = { progress },
+                                    color = SoftPrimary,
+                                    trackColor = Color(0xFFE2E8F0),
+                                    strokeWidth = 3.dp,
+                                    modifier = Modifier
+                                        .fillMaxSize()
+                                        .zIndex(1f)
+                                )
+                            }
+                            AiGenerationPlaceholder(
+                                isGenerating,
+                                canvasContainerSize,
+                                cancel = { isGenerating = false }
                             )
-                        },
-                        onExportVideo = {
-                            pauseCall()
-                            showExportDialog = false
-                            isGeneratingVideo = true
-                            scope.launch {
-                                exportStringArtVideo(
-                                    context,
-                                    nails,
-                                    nailsToDraw,
-                                    channelPaints,
-                                    backgroundColor,
-                                    canvasSize.width,
-                                    canvasSize.height,
-                                    { index ->
-                                        progressVideo = index / nailsToDraw.size.toFloat()
+
+                            Canvas(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .clipToBounds()
+                                    .onSizeChanged { size ->
+                                        canvasSize = size
+                                        scope.launch { fadePosition.snapTo(size.width - 10f) }
+                                    }
+                                    .zIndex(0f)
+                                    .drawWithContent {
+                                        layer.record { this@drawWithContent.drawContent() }
+                                        drawContent()
+                                    }
+                                    .pointerInput(Unit) {
+                                        detectTransformGestures { _, pan, _, _ ->
+                                            if (fadePosition.value + pan.x in 10f..size.width.toFloat() - 10f && fadding) {
+                                                scope.launch { fadePosition.snapTo(fadePosition.value + pan.x) }
+                                            }
+                                        }
+                                    }
+                            ) {
+                                redrawTrigger
+
+                                drawCircle(
+                                    center = Offset(center.x, center.y),
+                                    radius = size.width / 2f - 20f,
+                                    color = composeBackgroundColor
+                                )
+
+                                val radiusPx = size.width / 2 - 20f
+                                val left = center.x - radiusPx
+                                val top = center.y - radiusPx
+                                val right = center.x + radiusPx
+                                val bottom = center.y + radiusPx
+
+                                val ovalPath = Path().apply { addOval(Rect(left, top, right, bottom)) }
+
+                                val rightHalfRect = Path().apply {
+                                    addRect(Rect(Offset(fadePosition.value, 0f), Size(size.width, size.height)))
+                                }
+                                val circleRightHalf = Path().apply {
+                                    op(rightHalfRect, ovalPath, PathOperation.Intersect)
+                                }
+
+                                clipPath(ovalPath) {
+                                    drawImage(
+                                        image = accumulatedBitmap.asImageBitmap(),
+                                        dstSize = IntSize(size.width.toInt(), size.height.toInt())
+                                    )
+                                }
+
+                                clipPath(circleRightHalf) {
+                                    drawImage(image = toDrawBitmap.asImageBitmap())
+                                }
+
+                                var i = 0
+                                while (i < nails.size) {
+                                    val x = nails[i]
+                                    val y = nails[i + 1]
+                                    drawCircle(center = Offset(x, y), color = TextPrimary, radius = 1.2f)
+                                    i += 2
+                                }
+                            }
+                        }
+
+                        Surface(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp),
+                            shape = RoundedCornerShape(20.dp),
+                            color = SoftSurface,
+                            border = BorderStroke(1.5.dp, SoftBorder),
+                            shadowElevation = 6.dp
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 8.dp, vertical = 6.dp),
+                                horizontalArrangement = Arrangement.SpaceEvenly,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                BarIcon(
+                                    src = R.drawable.upload,
+                                    description = "Upload image",
+                                    color = TextPrimary,
+                                    onclick = {
+                                        pauseCall()
+                                        launcher.launch("image/*")
                                     },
-                                    { isGeneratingVideo = false },
-                                    { isGeneratingVideo }
+                                    active = !isGenerating,
+                                    context = context
+                                )
+                                BarIcon(
+                                    src = if (isPlaying) R.drawable.pause else R.drawable.play,
+                                    description = "Stop or Start",
+                                    isHighlighted = true,
+                                    onclick = {
+                                        if (isPlaying) pauseCall() else if (nailsToDraw.size < threadCount) playCall()
+                                    },
+                                    active = !isGenerating,
+                                    context = context
+                                )
+                                BarIcon(
+                                    src = R.drawable.replay,
+                                    description = "Replay draw",
+                                    color = TextPrimary,
+                                    onclick = { replay() },
+                                    active = !isGenerating,
+                                    context = context
+                                )
+                                BarIcon(
+                                    src = R.drawable.save,
+                                    description = "Export hilorama",
+                                    color = TextPrimary,
+                                    onclick = { showExportDialog = true },
+                                    active = !isGenerating,
+                                    context = context
+                                )
+                                BarIcon(
+                                    src = R.drawable.share,
+                                    description = "Share hilorama",
+                                    color = TextPrimary,
+                                    onclick = {
+                                        makeCapture(
+                                            scope = scope,
+                                            capture = layer,
+                                            name = "${System.currentTimeMillis()}",
+                                            context = context,
+                                            code = { result ->
+                                                if (result != 1) {
+                                                    Toast.makeText(context, "Error sharing the image", Toast.LENGTH_SHORT).show()
+                                                }
+                                            },
+                                            share = true,
+                                            shareFunction = { uri ->
+                                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                                    putExtra(Intent.EXTRA_STREAM, uri)
+                                                    type = "image/png"
+                                                    addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                                                }
+                                                context.startActivity(Intent.createChooser(intent, "Share with..."))
+                                            }
+                                        )
+                                    },
+                                    active = !isGenerating,
+                                    context = context
                                 )
                             }
                         }
-                    )
-                }
 
-                if (showAiDialog) {
-                    AiPromptDialog(
-                        onDismissRequest = { showAiDialog = false },
-                        loadBitmap = { aiBitmap ->
-                            bitmap = aiBitmap
-                            isGenerating = false
-                            needToCut = true
-                        },
-                        launchPlaceholder = { launch -> isGenerating = launch },
-                        context,
-                        scope,
-                        cancel = { !isGenerating }
-                    )
-                }
+                        HiloramaControls(
+                            nailCount = nailCount,
+                            onNailCountChange = { nails ->
+                                pauseCall()
+                                nailCount = nails
+                                controls[colorMode] = ControlStatus(nailCount, threadCount)
+                                replay(false)
+                            },
+                            threadCount = threadCount,
+                            onThreadCountChange = { threads ->
+                                pauseCall()
+                                threadCount = threads
+                                controls[colorMode] = ControlStatus(nailCount, threadCount)
+                                replay(false)
+                            },
+                            colorMode = colorMode,
+                            onColorModeChange = { channel ->
+                                pauseCall()
+                                if (channel > 1 && colorMode <= 1) toDrawBitmap = bitmap
+                                else if (channel <= 1 && colorMode > 1) toDrawBitmap = bitmapToGray(bitmap)
+                                toDrawBitmap = cropBitmap(toDrawBitmap, canvasSize.width, canvasSize.height)
+                                colorMode = channel
+                                nailCount = controls[colorMode].nailCount
+                                threadCount = controls[colorMode].threadCount
+                                replay()
+                            },
+                            active = !isGenerating,
+                            context = context
+                        )
+                    }
 
-                if (isGeneratingVideo) {
-                    ExportProgressDialog(
-                        progressVideo,
-                        onDismissRequest = { isGeneratingVideo = false }
-                    )
+                    if (showExportDialog) {
+                        ExportOptionDialog(
+                            onDismissRequest = { showExportDialog = false },
+                            onExportImage = {
+                                showExportDialog = false
+                                makeCapture(
+                                    scope = scope,
+                                    capture = layer,
+                                    name = "hilorama_${System.currentTimeMillis()}",
+                                    context = context,
+                                    code = { result ->
+                                        val message = if (result == 1) "✅ Saved correctly!" else "❌ Error saving the image"
+                                        Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                    }
+                                )
+                            },
+                            onExportVideo = {
+                                pauseCall()
+                                showExportDialog = false
+                                isGeneratingVideo = true
+                                scope.launch {
+                                    exportStringArtVideo(
+                                        context,
+                                        nails,
+                                        nailsToDraw,
+                                        channelPaints,
+                                        backgroundColor,
+                                        canvasSize.width,
+                                        canvasSize.height,
+                                        { index ->
+                                            progressVideo = index / nailsToDraw.size.toFloat()
+                                        },
+                                        { isGeneratingVideo = false },
+                                        { isGeneratingVideo }
+                                    )
+                                }
+                            }
+                        )
+                    }
+
+                    if (showAiDialog) {
+                        AiPromptDialog(
+                            onDismissRequest = { showAiDialog = false },
+                            loadBitmap = { aiBitmap ->
+                                bitmap = aiBitmap
+                                isGenerating = false
+                                needToCut = true
+                            },
+                            launchPlaceholder = { launch -> isGenerating = launch },
+                            context,
+                            scope,
+                            cancel = { !isGenerating }
+                        )
+                    }
+
+                    if (isGeneratingVideo) {
+                        ExportProgressDialog(
+                            progressVideo,
+                            onDismissRequest = { isGeneratingVideo = false }
+                        )
+                    }
                 }
             }
         }

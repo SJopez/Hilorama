@@ -33,10 +33,10 @@ class MainActivity : ComponentActivity() {
                         MainMenu(navController)
                     }
                     composable(route = Screens.Core.route){
-                        Core()
+                        Core(navController)
                     }
                     composable(route = Screens.Step.route){
-                        StepsCore()
+                        StepsCore(navController)
                     }
                     composable(route = Screens.BookMark.route){
                         BookmarkMenu()
