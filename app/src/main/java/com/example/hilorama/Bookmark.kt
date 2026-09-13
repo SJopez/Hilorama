@@ -36,8 +36,15 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
@@ -50,6 +57,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 @Composable
 fun BookmarkItem(
@@ -201,44 +212,118 @@ private fun ColorModeBadge(
         )
     }
 }
-
-@OptIn(ExperimentalSerializationApi::class)
-@Preview
 @Composable
-fun BookmarkMenu(){
-    val context = LocalContext.current
-    val dir = context.filesDir
-    val fileList = dir.listFiles { file ->
-        file.isFile && file.name.endsWith("HILORAMA.json")
+fun BookmarksHeader(
+    count: Int,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 16.dp)
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp)
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.bookmark),
+                contentDescription = "Bookmark icon",
+                tint = SoftPrimary,
+                modifier = Modifier.size(24.dp)
+            )
+
+            Text(
+                text = "Bookmarks",
+                fontFamily = Jakarta,
+                fontWeight = FontWeight.Bold,
+                fontSize = 20.sp,
+                color = TextPrimary
+            )
+        }
+
+        Surface(
+            color = SoftPrimary.copy(alpha = 0.12f),
+            shape = CircleShape
+        ) {
+            Text(
+                text = "$count",
+                fontFamily = Jakarta,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 13.sp,
+                color = SoftPrimary,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
+suspend fun deleteFile(name: String, context: Context) =
+    withContext(Dispatchers.IO){
+        File(context.filesDir, name).delete()
+    }
+@OptIn(ExperimentalSerializationApi::class)
+suspend fun loadData(file: File): DataStep =
+    withContext(Dispatchers.IO) {
+        try {
+            file.inputStream().use { stream ->
+                Json.decodeFromStream<DataStep>(stream)
+            }
+        } catch (e: Exception) {
+            e.printStackTrace()
+            DataStep()
+        }
     }
 
-    Surface (
+suspend fun loadList(context: Context): List<DataStep> = withContext(Dispatchers.IO) {
+    val dir = context.filesDir
+    val fileArray = dir.listFiles() ?: arrayOf()
+
+    fileArray
+        .filter { it.isFile && it.name.endsWith("HILORAMA.json") }
+        .map { file -> loadData(file) }
+        .filter { it.threads > 0 }
+}
+
+@OptIn(ExperimentalSerializationApi::class)
+@Composable
+fun BookmarkMenu() {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    var lastUpdate by remember { mutableStateOf(System.currentTimeMillis()) }
+
+    val dataList by produceState(initialValue = emptyList(), key1 = lastUpdate) {
+        value = loadList(context)
+    }
+
+    Surface(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = SoftSurface)
+            .background(color = TextPrimary)
             .displayCutoutPadding()
-    ){
+    ) {
         LazyColumn(
-            modifier = Modifier.fillMaxSize().padding(8.dp)
+            modifier = Modifier
+                .fillMaxSize()
+                .background(color = SoftSurface)
+                .navigationBarsPadding()
         ) {
-            fileList?.forEach { file ->
-                val data = try {
-                    file.inputStream().use { stream ->
-                        Json.decodeFromStream<DataStep>(stream)
-                    }
-                } catch (e: Exception) {
-                    e.printStackTrace()
-                    null
-                }
+            item {
+                BookmarksHeader(dataList.size)
+            }
 
-                if (data is DataStep){
-                    item {
-                        BookmarkItem(
-                            data
-                        )
+            items(items = dataList, key = { it.id }) { data ->
+                BookmarkItem(
+                    data = data,
+                    onDeleteClick = {
+                        scope.launch {
+                            deleteFile("${data.id}HILORAMA.json", context)
+                        }
+                        lastUpdate = System.currentTimeMillis()
                     }
-                }
-
+                )
             }
         }
     }

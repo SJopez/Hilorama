@@ -57,6 +57,13 @@ interface ThreadAdding {
     fun addThread(nail1: Int, nail2: Int)
 }
 
+sealed class Screens(val route: String){
+    object Core : Screens("core")
+    object Step : Screens("step")
+    object BookMark : Screens("bookmark")
+    object Menu : Screens("menu")
+}
+
 object HiloramaEngine {
     init {
         System.loadLibrary("Hilorama")
@@ -74,14 +81,14 @@ data class ControlStatus(val nailCount: Int, val threadCount: Int)
 
 @Serializable
 data class DataStep(
-    val id: Long,
-    val bitmapToDrawPath: String,
-    val accumulatedBitmappath: String,
-    val nailsToDraw: MutableList<Thread>,
-    val index: Int,
-    val nails: Int,
-    val threads: Int,
-    val colorMode: Int
+    val id: Long = -1L,
+    val bitmapToDrawPath: String = "",
+    val accumulatedBitmappath: String = "",
+    val nailsToDraw: MutableList<Thread> = mutableListOf(Thread(0, 0, 0)),
+    val index: Int = 0,
+    val nails: Int = 0,
+    val threads: Int = 0,
+    val colorMode: Int = 0
 )
 
 fun saveImageInPrivate(bitmap: Bitmap, name: String, context: Context) {
@@ -92,15 +99,17 @@ fun saveImageInPrivate(bitmap: Bitmap, name: String, context: Context) {
     }
 }
 
-fun saveDataStep(bitmapToDraw: Bitmap,
-                 accumulatedBitmap: Bitmap,
-                 nailsToDraw: MutableList<Thread>,
-                 index: Int,
-                 id: Long,
-                 nailCount: Int,
-                 threadCount: Int,
-                 colorMode: Int,
-                 context: Context) {
+suspend fun saveDataStep(
+    bitmapToDraw: Bitmap,
+    accumulatedBitmap: Bitmap,
+    nailsToDraw: MutableList<Thread>,
+    index: Int,
+    id: Long,
+    nailCount: Int,
+    threadCount: Int,
+    colorMode: Int,
+    context: Context
+) = withContext(Dispatchers.IO) {
     val btdName = "${id}_BitmapToDraw.png"
     saveImageInPrivate(
         bitmap = bitmapToDraw,
@@ -115,7 +124,7 @@ fun saveDataStep(bitmapToDraw: Bitmap,
         context = context
     )
 
-    val data = DataStep (
+    val data = DataStep(
         id = id,
         bitmapToDrawPath = btdName,
         accumulatedBitmappath = acbName,
@@ -193,15 +202,15 @@ fun imageToGray(bitmap: Bitmap, mono: Boolean = false): FloatArray {
 }
 
 class ChannelProp(
-    val channel: FloatArray,
-    val threads: Int
+    val channel: FloatArray = floatArrayOf(),
+    val threads: Int = 0
 )
 
 class Channels(
-    val channel0: ChannelProp,
-    val channel1: ChannelProp,
-    val channel2: ChannelProp,
-    val channel3: ChannelProp
+    val channel0: ChannelProp = ChannelProp(),
+    val channel1: ChannelProp = ChannelProp(),
+    val channel2: ChannelProp = ChannelProp(),
+    val channel3: ChannelProp = ChannelProp()
 )
 
 fun balanceThreadShares(

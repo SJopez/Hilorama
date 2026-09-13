@@ -306,7 +306,7 @@ fun StepsCore() {
         }
     }
     Box(
-        modifier = Modifier.fillMaxSize()
+        modifier = Modifier.fillMaxSize().background(color = SoftBackground)
     ) {
         if (needToCut) {
             bitmap?.let {
@@ -314,6 +314,7 @@ fun StepsCore() {
                     bitmap,
                     (screenWidth - 20).dp,
                     assignBitmap = {
+                        saved = false
                         id = System.currentTimeMillis()
                         bitmap = it
                         toDrawBitmap = if (colorMode <= 1) bitmapToGray(bitmap) else bitmap
@@ -368,21 +369,29 @@ fun StepsCore() {
                             }
                         )
                     )
+                    var lapse by remember { mutableStateOf(false) }
+
                     CircularButton(
                         onclick = {
-                            saved = true
-                            saveDataStep(
-                                toDrawBitmap,
-                                accumulatedBitmap,
-                                nailsToDraw,
-                                currIndex,
-                                id,
-                                nailCount,
-                                threadCount,
-                                colorMode,
-                                context,
-                            )
-                            Toast.makeText(context, "State saved!", Toast.LENGTH_SHORT).show()
+                            if (!lapse) {
+                                lapse = true
+                                scope.launch {
+                                    saveDataStep(
+                                        toDrawBitmap,
+                                        accumulatedBitmap,
+                                        nailsToDraw,
+                                        currIndex,
+                                        id,
+                                        nailCount,
+                                        threadCount,
+                                        colorMode,
+                                        context
+                                    )
+                                }
+                                saved = true
+                                lapse = false
+                                Toast.makeText(context, "✅ Bookmark saved!", Toast.LENGTH_SHORT).show()
+                            }
                         },
                         description = "Add to complete later...",
                         tint = if (saved) Color.White else SoftPrimary,

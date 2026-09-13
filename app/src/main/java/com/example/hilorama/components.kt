@@ -107,10 +107,10 @@ val Jakarta = FontFamily(
     Font(R.font.jakarta03, FontWeight.Bold)
 )
 val SoftPrimary = Color(0xFF6054C9)
-
-val ExtraSoftPrimary = Color(0xFF877FDA)
-val SoftBackground = Color(0xFFF8F9FA)
 val SoftSurface = Color(0xFFFFFFFF)
+
+val ExtraSoftPrimary = Color(0xFF937FDA)
+val SoftBackground = Color(0xFFF8F9FA)
 val TextPrimary = Color(0xFF2D3436)
 val TextSecondary = Color(0xFF636E72)
 val SoftBorder = Color(0xFFD1D5DB)
