@@ -260,9 +260,11 @@ fun BookmarksHeader(
     }
 }
 
-suspend fun deleteFile(name: String, context: Context) =
+suspend fun deleteFile(id: Long, context: Context) =
     withContext(Dispatchers.IO) {
-        File(context.filesDir, name).delete()
+        File(context.filesDir, "${id}HILORAMA.json").delete()
+        File(context.filesDir, "${id}_BitmapToDraw.png").delete()
+        File(context.filesDir, "${id}_AccumulatedBitmap.png").delete()
     }
 
 @OptIn(ExperimentalSerializationApi::class)
@@ -335,7 +337,7 @@ fun BookmarkMenu(
                                 onClick = { onBookmarkClick(data) },
                                 onDeleteClick = {
                                     scope.launch {
-                                        deleteFile("${data.id}HILORAMA.json", context)
+                                        deleteFile(data.id, context)
                                         lastUpdate = System.currentTimeMillis()
                                     }
                                 }

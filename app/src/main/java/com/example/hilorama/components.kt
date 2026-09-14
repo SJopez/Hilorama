@@ -834,7 +834,7 @@ fun ThreadItem(
 @Composable
 fun ThreadList(
     indexToDraw: Int,
-    nailsToDraw: MutableList<Thread>,
+    nailsToDraw: List<Thread>,
     current: Int,
     onSelect: (Int) -> Unit,
     modifier: Modifier = Modifier,

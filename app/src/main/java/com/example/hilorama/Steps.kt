@@ -10,6 +10,7 @@ import android.graphics.PorterDuffXfermode
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
@@ -43,12 +44,14 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -85,30 +88,48 @@ import androidx.navigation.NavHostController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.animation.Crossfade
 
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun StepsCore(controller: NavHostController) {
+fun StepsCore(controller: NavHostController, mode: Int = 0) {
     var loading by remember { mutableStateOf(true) }
-    var fadding by remember { mutableStateOf(false) }
+    var fadding by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     var fadePosition by remember { mutableStateOf(Animatable(-1f)) }
     var canvasSize by remember { mutableStateOf(IntSize.Zero) }
     val context = LocalContext.current
-    var colorMode by rememberSaveable { mutableStateOf(2) }
+
+    var colorMode by rememberSaveable { mutableStateOf(0) }
     var bitmap by remember {
-        mutableStateOf(BitmapFactory.decodeResource(context.resources, R.drawable.perl))
+        mutableStateOf(
+            if (DefaultStep.id == -1L){
+                BitmapFactory.decodeResource(context.resources, R.drawable.wave)
+            }
+            else DefaultStep.toDrawBitmap
+        )
     }
-    var accumulatedBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
+    var accumulatedBitmap by remember {
+        mutableStateOf(
+            if (DefaultStep.id == -1L){
+                BitmapFactory.decodeResource(context.resources, R.drawable.acumulated)
+                    .copy(Bitmap.Config.ARGB_8888, true)
+            }
+            else DefaultStep.accumulatedBitmap
+        )
+    }
     var stepBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
     var toDrawBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
     var grayImage by remember { mutableStateOf(floatArrayOf()) }
     var croppedBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
 
     var nails by remember { mutableStateOf(floatArrayOf()) }
-    val nailsToDraw = remember { mutableStateListOf<Thread>() }
-    var threadCount by remember { mutableStateOf(1000) }
-    var realThreadCount by remember { mutableStateOf(1000) }
+    var nailsToDraw by remember { mutableStateOf<List<Thread>>(
+        emptyList()
+    ) }
+    var mutableDraw = remember { mutableListOf<Thread>() }
+    var threadCount by remember { mutableStateOf(3000) }
+    var realThreadCount by remember { mutableStateOf(3000) }
     var nailCount by remember { mutableStateOf(360) }
 
     var loadingThreads by remember { mutableStateOf(false) }
@@ -119,23 +140,46 @@ fun StepsCore(controller: NavHostController) {
     var currIndex by remember { mutableStateOf(0) }
     var indexToDraw by remember { mutableStateOf(0) }
 
+    fun saveState(data: DataStep = DataStep(), saveFromMain: Boolean = false) {
+        DefaultStep = StepState(
+            id = System.currentTimeMillis(),
+            toDrawBitmap = toDrawBitmap,
+            accumulatedBitmap = accumulatedBitmap,
+            nailsToDraw = if (saveFromMain) nailsToDraw else data.nailsToDraw,
+            index = if (saveFromMain) currIndex else data.index,
+            nails = if (saveFromMain) nailCount else data.nails,
+            threads = if (saveFromMain) threadCount else data.threads,
+            colorMode = if (saveFromMain) colorMode else data.colorMode
+        )
+    }
+
+    BackHandler {
+        scope.launch {
+            saveState(saveFromMain = true)
+            controller.popBackStack()
+        }
+    }
+
     val strongChannel = remember(colorMode) {
-        when(colorMode) {
+        when (colorMode) {
             1 -> listOf(
                 Color.White
             )
-            2 -> listOf (
+
+            2 -> listOf(
                 Color.Black,
                 Color.Cyan,
                 Color.Magenta,
                 Color.Yellow
             )
+
             3 -> listOf(
                 Color.White,
                 Color.Red,
                 Color.Green,
                 Color.Blue
             )
+
             else -> listOf(Color.Black)
         }
     }
@@ -193,7 +237,7 @@ fun StepsCore(controller: NavHostController) {
     var showHelp by remember { mutableStateOf(false) }
     var saved by remember { mutableStateOf(false) }
     var id by remember { mutableStateOf(0L) }
-    var needToCut by remember { mutableStateOf(true) }
+    var needToCut by remember { mutableStateOf(false) }
     var confiStep by remember { mutableStateOf(false) }
     var redrawTrigger by remember { mutableStateOf(0) }
 
@@ -215,11 +259,58 @@ fun StepsCore(controller: NavHostController) {
     val backgroundColor = if (colorMode % 2 == 1) AndroidColor.BLACK else AndroidColor.WHITE
     val composeBackgroundColor = if (colorMode % 2 == 1) Color.Black else Color.White
     val canvasContainerSize = (screenWidth - 32).dp
+    var curr0 by remember { mutableStateOf(-1) }
+    var curr1 by remember { mutableStateOf(-1) }
 
-    LaunchedEffect(Unit) {
+    fun selectThread(index: Int, paint: Boolean = false) {
+        if (accumulatedBitmap.width != canvasSize.width){
+            accumulatedBitmap = cropBitmap(accumulatedBitmap, canvasSize.width, canvasSize.height)
+        }
+        val thread = nailsToDraw[index]
+        curr0 = thread.nail1
+        curr1 = thread.nail2
+
+        val curr0X = nails[2 * curr0]
+        val curr0Y = nails[2 * curr0 + 1]
+        val curr1X = nails[2 * curr1]
+        val curr1Y = nails[2 * curr1 + 1]
+        val color = nailsToDraw[index].color
+
+        if (paint) {
+            AndroidCanvas(accumulatedBitmap).drawLine(
+                curr0X,
+                curr0Y,
+                curr1X,
+                curr1Y,
+                channelPaints[color]
+            )
+        }
+    }
+
+    fun loadState() {
+        nailsToDraw = DefaultStep.nailsToDraw
+        currIndex = DefaultStep.index
+        nailCount = DefaultStep.nails
+        threadCount = DefaultStep.threads
+        colorMode = DefaultStep.colorMode
+        indexToDraw = currIndex
+        redrawTrigger++
+    }
+
+    LaunchedEffect(canvasSize) {
         withContext(Dispatchers.Default) {
-            toDrawBitmap = bitmapToGray(bitmap)
-            channels = imageToCMY(bitmap, threadCount)
+            bitmap?.let { currentBitmap ->
+                toDrawBitmap = bitmapToGray(currentBitmap)
+                channels = imageToCMY(currentBitmap, threadCount)
+            }
+            if (DefaultStep.id == -1L){
+                val data = loadDefaultStepFromRaw(context)
+                saveState(data)
+                loadState()
+            }
+            else {
+                loadState()
+            }
             loading = false
         }
     }
@@ -262,8 +353,8 @@ fun StepsCore(controller: NavHostController) {
         fun paintThread(nail1: Int, nail2: Int, color: Int) {
             if ((2 * maxOf(nail1, nail2) + 1) >= nails.size) return
 
-            nailsToDraw.add(Thread(nail1, nail2, color))
-            threadsProg = nailsToDraw.size / realThreadCount.toFloat()
+            mutableDraw.add(Thread(nail1, nail2, color))
+            threadsProg = mutableDraw.size / realThreadCount.toFloat()
         }
 
         HiloramaEngine.changeStatus(false)
@@ -296,26 +387,7 @@ fun StepsCore(controller: NavHostController) {
         }
     }
 
-    var curr0 by remember { mutableStateOf(-1) }
-    var curr1 by remember { mutableStateOf(-1) }
-
-    fun selectThread(index: Int, paint: Boolean = false){
-        val thread = nailsToDraw[index]
-        curr0 = thread.nail1
-        curr1 = thread.nail2
-
-        val curr0X = nails[2 * curr0]
-        val curr0Y = nails[2 * curr0 + 1]
-        val curr1X = nails[2 * curr1]
-        val curr1Y = nails[2 * curr1 + 1]
-        val color = nailsToDraw[index].color
-
-        if (paint){
-            AndroidCanvas(accumulatedBitmap).drawLine(curr0X, curr0Y, curr1X, curr1Y, channelPaints[color])
-        }
-    }
-
-    androidx.compose.animation.Crossfade(
+    Crossfade(
         targetState = loading,
         animationSpec = tween(durationMillis = 400),
         label = "StepsCoreLoadingCrossfade"
@@ -455,7 +527,7 @@ fun StepsCore(controller: NavHostController) {
                                 .onSizeChanged { size ->
                                     canvasSize = size
                                     nails = getNails(size.width / 2 - 20f, 20, nailCount)
-                                    scope.launch { fadePosition.snapTo(size.width - 10f) }
+                                    scope.launch { fadePosition.snapTo(size.width / 2f) }
                                 }
                                 .zIndex(0f)
                                 .pointerInput(Unit) {
@@ -490,6 +562,7 @@ fun StepsCore(controller: NavHostController) {
                             }
 
                             clipPath(ovalPath) {
+                                if (currIndex >= 0 && curr0 == -1 && !loadingThreads) selectThread(currIndex)
                                 drawImage(
                                     image = accumulatedBitmap.asImageBitmap(),
                                     dstSize = IntSize(size.width.toInt(), size.height.toInt())
@@ -497,7 +570,11 @@ fun StepsCore(controller: NavHostController) {
                             }
 
                             clipPath(circleRightHalf) {
-                                drawImage(image = toDrawBitmap.asImageBitmap())
+                                drawImage(
+                                    image = toDrawBitmap.asImageBitmap(),
+                                    dstSize = IntSize(size.width.toInt(), size.height.toInt())
+                                )
+
                             }
 
                             var i = 0
@@ -602,6 +679,7 @@ fun StepsCore(controller: NavHostController) {
                                     state = listState,
                                     channel = strongChannel,
                                 )
+
                             }
                         }
 
@@ -618,8 +696,9 @@ fun StepsCore(controller: NavHostController) {
                 }
 
                 LaunchedEffect(threadsProg) {
-                    if (nailsToDraw.size == realThreadCount) {
+                    if (mutableDraw.size == realThreadCount) {
                         loadingThreads = false
+                        nailsToDraw = mutableDraw.toList()
                         indexToDraw = 0
                         currIndex = 0
                         selectThread(0, true)
@@ -688,11 +767,11 @@ fun StepsCore(controller: NavHostController) {
                                 )
                                 MainButton(
                                     onclick = {
+                                        loadingThreads = true
                                         curr0 = -1
                                         curr1 = -1
-                                        loadingThreads = true
                                         confiStep = false
-                                        nailsToDraw.clear()
+                                        mutableDraw.clear()
                                         lastAssign = System.currentTimeMillis()
                                     },
                                     text = "Create",

@@ -42,6 +42,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.StringFormat
 import java.io.File
@@ -52,6 +53,8 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.decodeFromStream
+import java.io.InputStreamReader
 
 interface ThreadAdding {
     fun addThread(nail1: Int, nail2: Int)
@@ -78,18 +81,37 @@ data class Thread(val nail1: Int, val nail2: Int, val color: Int)
 
 data class ControlStatus(val nailCount: Int, val threadCount: Int)
 
-
 @Serializable
 data class DataStep(
     val id: Long = -1L,
     val bitmapToDrawPath: String = "",
     val accumulatedBitmappath: String = "",
-    val nailsToDraw: MutableList<Thread> = mutableListOf(Thread(0, 0, 0)),
+    val nailsToDraw: List<Thread> = listOf(Thread(0, 0, 0)),
     val index: Int = 0,
     val nails: Int = 0,
     val threads: Int = 0,
     val colorMode: Int = 0
 )
+
+class StepState(
+    val id: Long = -1,
+    val toDrawBitmap: Bitmap = createBitmap(1, 1),
+    val accumulatedBitmap: Bitmap = createBitmap(1, 1),
+    val nailsToDraw: List<Thread> = listOf(),
+    val index: Int = 0,
+    val nails: Int = 0,
+    val threads: Int = 0,
+    val colorMode: Int = 0
+)
+
+var DefaultStep = StepState()
+
+@kotlin.OptIn(ExperimentalSerializationApi::class)
+fun loadDefaultStepFromRaw(context: Context): DataStep {
+    return context.resources.openRawResource(R.raw.example).use { inputStream ->
+        Json.decodeFromStream<DataStep>(inputStream)
+    }
+}
 
 fun saveImageInPrivate(bitmap: Bitmap, name: String, context: Context) {
     val imageFile = File(context.filesDir, name)
@@ -102,7 +124,7 @@ fun saveImageInPrivate(bitmap: Bitmap, name: String, context: Context) {
 suspend fun saveDataStep(
     bitmapToDraw: Bitmap,
     accumulatedBitmap: Bitmap,
-    nailsToDraw: MutableList<Thread>,
+    nailsToDraw: List<Thread>,
     index: Int,
     id: Long,
     nailCount: Int,
