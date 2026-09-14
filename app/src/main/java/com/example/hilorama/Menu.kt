@@ -9,6 +9,7 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -55,71 +56,85 @@ fun MainMenu(controller: NavHostController) {
     ) {
         StringArtBackgroundDecoration()
 
-        HeaderSection(
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(top = 40.dp)
-        )
-
         Column(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 24.dp)
-                .align(Alignment.Center),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+                .fillMaxSize()
+                .padding(horizontal = 24.dp, vertical = 24.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.SpaceBetween
         ) {
-            MenuOptionCard(
-                title = "Start creating",
-                subtitle = "Create String Art from image",
-                tag = "STRING ART",
-                accentColor = SoftPrimary,
-                onClick = { controller.navigate(Screens.Core.route) }
-            )
+            HeaderSection()
 
-            MenuOptionCard(
-                title = "Steps",
-                subtitle = "Step-by-step guide",
-                tag = "STEP",
-                accentColor = ExtraSoftPrimary,
-                onClick = { controller.navigate(Screens.Step.route) }
-            )
+            Box(
+                modifier = Modifier
+                    .size(120.dp)
+                    .clip(RoundedCornerShape(22.dp))
+                    .background(SoftSurface)
+                    .border(1.dp, SoftBorder, RoundedCornerShape(22.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.silouette),
+                    contentDescription = "App Icon",
+                    modifier = Modifier.size(120.dp)
+                )
+            }
 
-            MenuOptionCard(
-                title = "Bookmarks",
-                subtitle = "Saved projects",
-                tag = "BOOKMARK",
-                accentColor = SoftPrimary,
-                onClick = { controller.navigate(Screens.BookMark.route) }
-            )
-        }
+            Column(
+                modifier = Modifier.fillMaxWidth(),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                MenuOptionCard(
+                    title = "Start creating",
+                    subtitle = "Create String Art from image",
+                    tag = "STRING ART",
+                    accentColor = SoftPrimary,
+                    onClick = { controller.navigate(Screens.Core.route) }
+                )
 
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 24.dp)
-                .clip(RoundedCornerShape(50))
-                .clickable {
-                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
-                    context.startActivity(intent)
-                }
-                .padding(horizontal = 16.dp, vertical = 8.dp)
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.github),
-                contentDescription = "GitHub Repository",
-                tint = TextSecondary,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = "GitHub",
-                fontFamily = Jakarta,
-                fontWeight = FontWeight.SemiBold,
-                fontSize = 13.sp,
-                color = TextSecondary
-            )
+                MenuOptionCard(
+                    title = "Steps",
+                    subtitle = "Step-by-step guide",
+                    tag = "STEP",
+                    accentColor = ExtraSoftPrimary,
+                    onClick = { controller.navigate(Screens.Step.route) }
+                )
+
+                MenuOptionCard(
+                    title = "Bookmarks",
+                    subtitle = "Saved projects",
+                    tag = "BOOKMARK",
+                    accentColor = SoftPrimary,
+                    onClick = { controller.navigate(Screens.BookMark.route) }
+                )
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(githubUrl))
+                        context.startActivity(intent)
+                    }
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Icon(
+                    painter = painterResource(id = R.drawable.github),
+                    contentDescription = "GitHub Repository",
+                    tint = TextSecondary,
+                    modifier = Modifier.size(18.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = "GitHub",
+                    fontFamily = Jakarta,
+                    fontWeight = FontWeight.SemiBold,
+                    fontSize = 13.sp,
+                    color = TextSecondary
+                )
+            }
         }
     }
 }
@@ -128,7 +143,7 @@ fun MainMenu(controller: NavHostController) {
 private fun HeaderSection(modifier: Modifier = Modifier) {
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier
+        modifier = modifier.padding(top = 16.dp)
     ) {
         Text(
             text = "HILORAMA",
