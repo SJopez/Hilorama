@@ -115,7 +115,7 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                 BitmapFactory.decodeResource(context.resources, R.drawable.acumulated)
                     .copy(Bitmap.Config.ARGB_8888, true)
             }
-            else DefaultStep.accumulatedBitmap
+            else DefaultStep.accumulatedBitmap.copy(Bitmap.Config.ARGB_8888, true)
         )
     }
     var stepBitmap by remember { mutableStateOf(createBitmap(1, 1)) }
@@ -139,10 +139,12 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
 
     var currIndex by remember { mutableStateOf(0) }
     var indexToDraw by remember { mutableStateOf(0) }
+    var id by remember { mutableStateOf(-1L) }
+    var saved by remember { mutableStateOf(false) }
 
     fun saveState(data: DataStep = DataStep(), saveFromMain: Boolean = false) {
         DefaultStep = StepState(
-            id = System.currentTimeMillis(),
+            id = id,
             toDrawBitmap = toDrawBitmap,
             accumulatedBitmap = accumulatedBitmap,
             nailsToDraw = if (saveFromMain) nailsToDraw else data.nailsToDraw,
@@ -156,7 +158,7 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
     BackHandler {
         scope.launch {
             saveState(saveFromMain = true)
-            controller.popBackStack()
+            controller.navigate(Screens.Menu.route)
         }
     }
 
@@ -235,8 +237,6 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
     }
 
     var showHelp by remember { mutableStateOf(false) }
-    var saved by remember { mutableStateOf(false) }
-    var id by remember { mutableStateOf(0L) }
     var needToCut by remember { mutableStateOf(false) }
     var confiStep by remember { mutableStateOf(false) }
     var redrawTrigger by remember { mutableStateOf(0) }
@@ -288,12 +288,15 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
     }
 
     fun loadState() {
+        id = DefaultStep.id
         nailsToDraw = DefaultStep.nailsToDraw
         currIndex = DefaultStep.index
         nailCount = DefaultStep.nails
         threadCount = DefaultStep.threads
         colorMode = DefaultStep.colorMode
         indexToDraw = currIndex
+
+        if (id != -1L) saved = true
         redrawTrigger++
     }
 

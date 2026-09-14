@@ -53,6 +53,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.graphics.createBitmap
+import androidx.navigation.NavHostController
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -66,23 +68,26 @@ fun BookmarkItem(
     data: DataStep,
     modifier: Modifier = Modifier,
     onDeleteClick: () -> Unit = {},
-    onClick: () -> Unit = {}
+    controller: NavHostController
 ) {
     val context = LocalContext.current
-    val imageFile = remember(data.bitmapToDrawPath) {
-        File(context.filesDir, data.bitmapToDrawPath)
-    }
-
-    val imageBitmap = remember(imageFile.absolutePath) {
-        if (imageFile.exists()) {
-            BitmapFactory.decodeFile(imageFile.absolutePath)?.asImageBitmap()
-        } else {
-            null
-        }
-    }
+    val imageBitmap = loadBitmapFromDir(context, data.bitmapToDrawPath)
 
     Card(
-        onClick = onClick,
+        onClick = {
+            val accumulatedBitmap = loadBitmapFromDir(context, data.accumulatedBitmappath)
+            DefaultStep = StepState(
+                id = data.id,
+                toDrawBitmap = imageBitmap ?: createBitmap(1, 1),
+                accumulatedBitmap = accumulatedBitmap ?: createBitmap(1, 1),
+                nailsToDraw = data.nailsToDraw,
+                index = data.index,
+                nails = data.nails,
+                threads = data.threads,
+                colorMode = data.colorMode
+            )
+            controller.navigate(Screens.Step.route)
+        },
         shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(containerColor = SoftSurface),
         border = BorderStroke(1.dp, SoftBorder),
@@ -105,7 +110,7 @@ fun BookmarkItem(
             ) {
                 if (imageBitmap != null) {
                     Image(
-                        bitmap = imageBitmap,
+                        bitmap = imageBitmap.asImageBitmap(),
                         contentDescription = "Hilorama preview",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier.fillMaxSize()
@@ -292,9 +297,7 @@ suspend fun loadList(context: Context): List<DataStep> = withContext(Dispatchers
 
 @OptIn(ExperimentalSerializationApi::class)
 @Composable
-fun BookmarkMenu(
-    onBookmarkClick: (DataStep) -> Unit = {}
-) {
+fun BookmarkMenu(controller: NavHostController) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var lastUpdate by remember { mutableStateOf(0L) }
@@ -334,13 +337,13 @@ fun BookmarkMenu(
                         items(items = dataList, key = { it.id }) { data ->
                             BookmarkItem(
                                 data = data,
-                                onClick = { onBookmarkClick(data) },
                                 onDeleteClick = {
                                     scope.launch {
                                         deleteFile(data.id, context)
                                         lastUpdate = System.currentTimeMillis()
                                     }
-                                }
+                                },
+                                controller = controller
                             )
                         }
                     }

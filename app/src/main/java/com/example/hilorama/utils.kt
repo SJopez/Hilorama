@@ -3,6 +3,7 @@ package com.example.hilorama
 import android.content.ContentValues
 import android.content.Context
 import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.ColorMatrix
 import android.graphics.ColorMatrixColorFilter
@@ -15,6 +16,7 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.ui.geometry.Offset
 import androidx.annotation.OptIn
+import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -29,6 +31,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.layer.GraphicsLayer
 import androidx.compose.ui.graphics.nativeCanvas
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
@@ -105,6 +108,16 @@ class StepState(
 )
 
 var DefaultStep = StepState()
+
+fun loadBitmapFromDir(context: Context, path: String): Bitmap? {
+    val imageFile = File(context.filesDir, path)
+
+    return if (imageFile.exists()) {
+        BitmapFactory.decodeFile(imageFile.absolutePath)
+    } else {
+        null
+    }
+}
 
 @kotlin.OptIn(ExperimentalSerializationApi::class)
 fun loadDefaultStepFromRaw(context: Context): DataStep {
