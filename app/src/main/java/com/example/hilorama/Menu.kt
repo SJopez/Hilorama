@@ -13,6 +13,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -25,11 +26,15 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -48,13 +53,51 @@ fun MainMenu(controller: NavHostController) {
     val context = LocalContext.current
     val githubUrl = "https://github.com/SJopez/Hilorama"
 
+    val themeStorage = remember { ThemeStorage(context) }
+    val systemInDark = isSystemInDarkTheme()
+
+    var isDarkMode by remember {
+        mutableStateOf(themeStorage.isDarkMode(systemInDark))
+    }
+
+    setAppColors(isDarkMode)
+
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(SoftBackground)
+            .background(Palette.softBackground)
             .displayCutoutPadding()
     ) {
-        StringArtBackgroundDecoration()
+        StringArtBackgroundDecoration(Palette = Palette)
+
+        Box(
+            modifier = Modifier
+                .padding(8.dp)
+                .align(Alignment.TopEnd)
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(42.dp)
+                    .clip(CircleShape)
+                    .background(Palette.softSurface)
+                    .border(1.dp, Palette.softBorder, CircleShape)
+                    .clickable {
+                        isDarkMode = !isDarkMode
+                        setAppColors(isDarkMode)
+                        themeStorage.saveDarkMode(isDarkMode)
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    painter = painterResource(
+                        id = if (isDarkMode) R.drawable.light else R.drawable.dark
+                    ),
+                    contentDescription = "Toggle Theme",
+                    tint = Palette.textPrimary,
+                    modifier = Modifier.size(20.dp)
+                )
+            }
+        }
 
         Column(
             modifier = Modifier
@@ -63,18 +106,18 @@ fun MainMenu(controller: NavHostController) {
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.SpaceBetween
         ) {
-            HeaderSection()
+            HeaderSection(palette = Palette)
 
             Box(
                 modifier = Modifier
                     .size(120.dp)
                     .clip(RoundedCornerShape(22.dp))
-                    .background(SoftSurface)
-                    .border(1.dp, SoftBorder, RoundedCornerShape(22.dp)),
+                    .background(Palette.softSurface)
+                    .border(1.dp, Palette.softBorder, RoundedCornerShape(22.dp)),
                 contentAlignment = Alignment.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.silouette),
+                    painter = painterResource(id = R.drawable.yarn),
                     contentDescription = "App Icon",
                     modifier = Modifier.size(120.dp)
                 )
@@ -88,15 +131,17 @@ fun MainMenu(controller: NavHostController) {
                     title = "Start creating",
                     subtitle = "Create String Art from image",
                     tag = "STRING ART",
-                    accentColor = SoftPrimary,
+                    accentColor = Palette.softPrimary,
+                    Palette = Palette,
                     onClick = { controller.navigate(Screens.Core.route) }
                 )
 
                 MenuOptionCard(
                     title = "Steps",
-                    subtitle = "Step-by-step guide",
+                    subtitle = "Create String Art step by step",
                     tag = "STEP",
-                    accentColor = ExtraSoftPrimary,
+                    accentColor = Palette.softPrimary,
+                    Palette = Palette,
                     onClick = { controller.navigate(Screens.Step.route) }
                 )
 
@@ -104,7 +149,8 @@ fun MainMenu(controller: NavHostController) {
                     title = "Bookmarks",
                     subtitle = "Saved projects",
                     tag = "BOOKMARK",
-                    accentColor = SoftPrimary,
+                    accentColor = Palette.softPrimary,
+                    Palette = Palette,
                     onClick = { controller.navigate(Screens.BookMark.route) }
                 )
             }
@@ -123,7 +169,7 @@ fun MainMenu(controller: NavHostController) {
                 Icon(
                     painter = painterResource(id = R.drawable.github),
                     contentDescription = "GitHub Repository",
-                    tint = TextSecondary,
+                    tint = Palette.textSecondary,
                     modifier = Modifier.size(18.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
@@ -132,7 +178,7 @@ fun MainMenu(controller: NavHostController) {
                     fontFamily = Jakarta,
                     fontWeight = FontWeight.SemiBold,
                     fontSize = 13.sp,
-                    color = TextSecondary
+                    color = Palette.textSecondary
                 )
             }
         }
@@ -140,27 +186,35 @@ fun MainMenu(controller: NavHostController) {
 }
 
 @Composable
-private fun HeaderSection(modifier: Modifier = Modifier) {
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        modifier = modifier.padding(top = 16.dp)
+private fun HeaderSection(
+    modifier: Modifier = Modifier, palette: AppColors
+) {
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 8.dp)
     ) {
-        Text(
-            text = "HILORAMA",
-            fontFamily = Jakarta,
-            fontWeight = FontWeight.Bold,
-            fontSize = 32.sp,
-            color = TextPrimary,
-            letterSpacing = 4.sp
-        )
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(
-            text = "String Art Generator",
-            fontFamily = Jakarta,
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 14.sp,
-            color = SoftPrimary
-        )
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            Text(
+                text = "HILORAMA",
+                fontFamily = Jakarta,
+                fontWeight = FontWeight.Bold,
+                fontSize = 32.sp,
+                color = palette.strongColor,
+                letterSpacing = 4.sp
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "String Art Generator",
+                fontFamily = Jakarta,
+                fontWeight = FontWeight.SemiBold,
+                fontSize = 14.sp,
+                color = palette.softPrimary
+            )
+        }
     }
 }
 
@@ -170,16 +224,17 @@ private fun MenuOptionCard(
     subtitle: String,
     tag: String,
     accentColor: Color,
+    Palette: AppColors,
     onClick: () -> Unit
 ) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(18.dp))
-            .background(SoftSurface)
+            .background(Palette.softSurface)
             .border(
                 width = 1.dp,
-                color = SoftBorder,
+                color = Palette.softBorder,
                 shape = RoundedCornerShape(18.dp)
             )
             .clickable { onClick() }
@@ -205,7 +260,7 @@ private fun MenuOptionCard(
                     fontFamily = Jakarta,
                     fontWeight = FontWeight.Bold,
                     fontSize = 18.sp,
-                    color = TextPrimary
+                    color = Palette.strongColor
                 )
                 Spacer(modifier = Modifier.height(2.dp))
                 Text(
@@ -213,14 +268,14 @@ private fun MenuOptionCard(
                     fontFamily = Jakarta,
                     fontWeight = FontWeight.Normal,
                     fontSize = 13.sp,
-                    color = TextSecondary
+                    color = Palette.textSecondary
                 )
             }
 
             Box(
                 modifier = Modifier
                     .size(10.dp)
-                    .clip(RoundedCornerShape(50))
+                    .clip(CircleShape)
                     .background(accentColor)
             )
         }
@@ -228,7 +283,7 @@ private fun MenuOptionCard(
 }
 
 @Composable
-private fun StringArtBackgroundDecoration() {
+private fun StringArtBackgroundDecoration(Palette: AppColors) {
     val infiniteTransition = rememberInfiniteTransition(label = "waveAnimation")
     val waveProgress by infiniteTransition.animateFloat(
         initialValue = 0f,
@@ -253,7 +308,7 @@ private fun StringArtBackgroundDecoration() {
             val startTop = Offset(width * fraction, 0f)
             val endTop = Offset(width, height * 0.3f * (1 - fraction))
             drawLine(
-                color = SoftPrimary.copy(alpha = waveAlpha),
+                color = Palette.softPrimary.copy(alpha = waveAlpha),
                 start = startTop,
                 end = endTop,
                 strokeWidth = 2.5f
@@ -262,7 +317,7 @@ private fun StringArtBackgroundDecoration() {
             val startBottom = Offset(0f, height - (height * 0.3f * fraction))
             val endBottom = Offset(width * (1 - fraction), height)
             drawLine(
-                color = ExtraSoftPrimary.copy(alpha = waveAlpha),
+                color = Palette.extraSoftPrimary.copy(alpha = waveAlpha),
                 start = startBottom,
                 end = endBottom,
                 strokeWidth = 2.5f

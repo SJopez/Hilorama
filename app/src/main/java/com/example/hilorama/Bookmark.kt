@@ -50,6 +50,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -89,8 +90,8 @@ fun BookmarkItem(
             controller.navigate(Screens.Step.route)
         },
         shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(containerColor = SoftSurface),
-        border = BorderStroke(1.dp, SoftBorder),
+        colors = CardDefaults.cardColors(containerColor = Palette.softSurface),
+        border = BorderStroke(1.dp, Palette.softBorder),
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp),
@@ -105,7 +106,7 @@ fun BookmarkItem(
                 modifier = Modifier
                     .width(96.dp)
                     .fillMaxHeight()
-                    .background(SoftBackground),
+                    .background(Palette.softBackground),
                 contentAlignment = Alignment.Center
             ) {
                 if (imageBitmap != null) {
@@ -121,7 +122,7 @@ fun BookmarkItem(
                         fontFamily = Jakarta,
                         fontWeight = FontWeight.Normal,
                         fontSize = 12.sp,
-                        color = TextSecondary
+                        color = Palette.textSecondary
                     )
                 }
             }
@@ -141,7 +142,7 @@ fun BookmarkItem(
                         fontFamily = Jakarta,
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 14.sp,
-                        color = TextPrimary
+                        color = Palette.textPrimary
                     )
                     Spacer(modifier = Modifier.height(4.dp))
                     Text(
@@ -149,7 +150,7 @@ fun BookmarkItem(
                         fontFamily = Jakarta,
                         fontWeight = FontWeight.Normal,
                         fontSize = 13.sp,
-                        color = TextSecondary
+                        color = Palette.textSecondary
                     )
                 }
 
@@ -181,29 +182,29 @@ private fun ColorModeBadge(
     modifier: Modifier = Modifier
 ) {
     val (backgroundColor, annotatedText) = when (colorMode) {
-        0 -> SoftSurface to buildAnnotatedString {
-            withStyle(SpanStyle(color = TextPrimary)) { append("Gray") }
+        0 -> Palette.softSurface to buildAnnotatedString {
+            withStyle(SpanStyle(color = Palette.textPrimary)) { append("Gray") }
         }
-        1 -> TextPrimary to buildAnnotatedString {
-            withStyle(SpanStyle(color = SoftSurface)) { append("Mono") }
+        1 -> Palette.textPrimary to buildAnnotatedString {
+            withStyle(SpanStyle(color = Palette.softSurface)) { append("Mono") }
         }
-        2 -> SoftBackground to buildAnnotatedString {
+        2 -> Palette.softBackground to buildAnnotatedString {
             withStyle(SpanStyle(color = Color(0xFF0097A7))) { append("C") }
             withStyle(SpanStyle(color = Color(0xFFC2185B))) { append("M") }
             withStyle(SpanStyle(color = Color(0xFFF57F17))) { append("Y") }
         }
-        3 -> TextPrimary to buildAnnotatedString {
+        3 -> Palette.textPrimary to buildAnnotatedString {
             withStyle(SpanStyle(color = Color(0xFFFF5252))) { append("R") }
             withStyle(SpanStyle(color = Color(0xFF69F0AE))) { append("G") }
             withStyle(SpanStyle(color = Color(0xFF448AFF))) { append("B") }
         }
-        else -> SoftBackground to buildAnnotatedString { append("?") }
+        else -> Palette.softBackground to buildAnnotatedString { append("?") }
     }
 
     Surface(
         color = backgroundColor,
         shape = RoundedCornerShape(4.dp),
-        border = if (colorMode == 0 || colorMode == 2) BorderStroke(1.dp, SoftBorder) else null,
+        border = if (colorMode == 0 || colorMode == 2) BorderStroke(1.dp, Palette.softBorder) else null,
         modifier = modifier
     ) {
         Text(
@@ -236,7 +237,7 @@ fun BookmarksHeader(
             Icon(
                 painter = painterResource(id = R.drawable.bookmark),
                 contentDescription = "Bookmark icon",
-                tint = SoftPrimary,
+                tint = Palette.softPrimary,
                 modifier = Modifier.size(24.dp)
             )
 
@@ -245,12 +246,12 @@ fun BookmarksHeader(
                 fontFamily = Jakarta,
                 fontWeight = FontWeight.Bold,
                 fontSize = 20.sp,
-                color = TextPrimary
+                color = Palette.textPrimary
             )
         }
 
         Surface(
-            color = SoftPrimary.copy(alpha = 0.12f),
+            color = Palette.softPrimary.copy(alpha = 0.12f),
             shape = CircleShape
         ) {
             Text(
@@ -258,8 +259,53 @@ fun BookmarksHeader(
                 fontFamily = Jakarta,
                 fontWeight = FontWeight.SemiBold,
                 fontSize = 13.sp,
-                color = SoftPrimary,
+                color = Palette.softPrimary,
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun EmptyBookmarksPlaceholder(
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.yarn),
+                contentDescription = "No bookmarks available",
+                modifier = Modifier.size(120.dp)
+            )
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            Text(
+                text = "No saved projects yet",
+                fontFamily = Jakarta,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                color = Palette.textPrimary,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "Your bookmarked string art will appear here.",
+                fontFamily = Jakarta,
+                fontWeight = FontWeight.Normal,
+                fontSize = 14.sp,
+                color = Palette.textSecondary,
+                textAlign = TextAlign.Center
             )
         }
     }
@@ -312,7 +358,7 @@ fun BookmarkMenu(controller: NavHostController) {
     Surface(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = TextPrimary)
+            .background(color = Palette.textPrimary)
             .displayCutoutPadding()
     ) {
         Crossfade(
@@ -324,27 +370,32 @@ fun BookmarkMenu(controller: NavHostController) {
                 LoadingScreen()
             } else {
                 Column(
-                    modifier = Modifier.background(color = SoftBackground)
-                ){
+                    modifier = Modifier.background(color = Palette.softBackground)
+                ) {
                     BookmarksHeader(dataList.size)
-                    HorizontalDivider(color = SoftPrimary)
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(color = SoftSurface)
-                            .navigationBarsPadding()
-                    ) {
-                        items(items = dataList, key = { it.id }) { data ->
-                            BookmarkItem(
-                                data = data,
-                                onDeleteClick = {
-                                    scope.launch {
-                                        deleteFile(data.id, context)
-                                        lastUpdate = System.currentTimeMillis()
-                                    }
-                                },
-                                controller = controller
-                            )
+                    HorizontalDivider(color = Palette.softPrimary)
+
+                    if (dataList.isEmpty()) {
+                        EmptyBookmarksPlaceholder()
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(color = Palette.softBackground)
+                                .navigationBarsPadding()
+                        ) {
+                            items(items = dataList, key = { it.id }) { data ->
+                                BookmarkItem(
+                                    data = data,
+                                    onDeleteClick = {
+                                        scope.launch {
+                                            deleteFile(data.id, context)
+                                            lastUpdate = System.currentTimeMillis()
+                                        }
+                                    },
+                                    controller = controller
+                                )
+                            }
                         }
                     }
                 }

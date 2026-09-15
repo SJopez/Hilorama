@@ -21,7 +21,7 @@ fun LoadingScreen(){
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(color = SoftBackground)
+            .background(color = Palette.softBackground)
             .zIndex(4f),
         contentAlignment = Alignment.Center
     ){
@@ -33,7 +33,8 @@ fun LoadingScreen(){
             Text(
                 text = "Loading...",
                 fontFamily = Jakarta,
-                fontSize = 28.sp
+                fontSize = 28.sp,
+                color = Palette.textPrimary
             )
         }
     }

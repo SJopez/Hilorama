@@ -61,9 +61,6 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import kotlin.random.Random
 
-val FixedDarkText = Color(0xFF1A1A1A)
-val FixedBlack = Color(0xFF000000)
-
 
 interface ImageApi {
     @Streaming
@@ -106,7 +103,7 @@ fun AiPromptDialog(
     Dialog(onDismissRequest = onDismissRequest, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Card(
             shape = RoundedCornerShape(24.dp),
-            colors = CardDefaults.cardColors(containerColor = Color.White),
+            colors = CardDefaults.cardColors(containerColor = Palette.softBackground),
             elevation = CardDefaults.cardElevation(defaultElevation = 12.dp),
             modifier = Modifier
                 .fillMaxWidth()
@@ -132,7 +129,7 @@ fun AiPromptDialog(
                         text = "Generate with AI",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = FixedDarkText,
+                        color = Palette.textPrimary,
                         fontFamily = Jakarta
                     )
                 }
@@ -145,7 +142,7 @@ fun AiPromptDialog(
                             .fillMaxWidth()
                             .height(120.dp)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(Color(0xFFF5F5F5))
+                            .background(Palette.softSurface)
                             .padding(16.dp)
                     ) {
                         if (aiPromptText.isEmpty()) {
@@ -161,7 +158,7 @@ fun AiPromptDialog(
                             value = aiPromptText ,
                             onValueChange = { aiPromptText = it },
                             textStyle = TextStyle(
-                                color = FixedBlack,
+                                color = Palette.strongColor,
                                 fontSize = 14.sp,
                                 fontWeight = FontWeight.Normal,
                                 fontFamily = Jakarta
@@ -232,13 +229,13 @@ fun AiPromptDialog(
 
                         colors = ButtonDefaults.buttonColors(
                             containerColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.LightGray,
                             contentColor = Color.White,
                             disabledContentColor = Color.White.copy(alpha = 0.5f)
                         ),
                         modifier = Modifier.background(
                             brush = if (isEnabled) accentGradient else Brush.horizontalGradient(
-                                listOf(Color(0xFFE0E0E0), Color(0xFFE0E0E0))
+                                listOf(Palette.softSurface, Palette.softSurface)
                             ),
                             shape = RoundedCornerShape(12.dp)
                         )
@@ -246,7 +243,8 @@ fun AiPromptDialog(
                         Text(
                             text = "Generate",
                             fontWeight = FontWeight.SemiBold,
-                            fontFamily = Jakarta
+                            fontFamily = Jakarta,
+                            color = if (isEnabled) Color.White else Palette.textSecondary
                         )
                     }
                 }

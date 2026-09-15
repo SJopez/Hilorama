@@ -343,7 +343,7 @@ fun Core(controller: NavHostController) {
         } else {
             Surface(
                 modifier = Modifier.fillMaxSize(),
-                color = SoftBackground
+                color = Palette.softBackground
             ) {
                 Box(modifier = Modifier.fillMaxSize()) {
                     if (needToCut) {
@@ -385,9 +385,9 @@ fun Core(controller: NavHostController) {
                                     .clip(CircleShape)
                                     .then(
                                         if (fadding) {
-                                            Modifier.background(SoftPrimary, CircleShape)
+                                            Modifier.background(Palette.softPrimary, CircleShape)
                                         } else {
-                                            Modifier.border(2.dp, SoftPrimary, CircleShape)
+                                            Modifier.border(2.dp, Palette.softPrimary, CircleShape)
                                         }
                                     )
                                     .clickable {
@@ -404,17 +404,17 @@ fun Core(controller: NavHostController) {
                                 Icon(
                                     painter = painterResource(id = R.drawable.fade),
                                     contentDescription = "Toggle fade effect",
-                                    tint = if (fadding) Color.White else SoftPrimary,
+                                    tint = if (fadding) Color.White else Palette.softPrimary,
                                     modifier = Modifier.size(20.dp)
                                 )
                             }
 
                             Box(
                                 modifier = Modifier
-                                    .shadow(10.dp, RoundedCornerShape(16.dp), spotColor = SoftPrimary.copy(alpha = 0.5f))
+                                    .shadow(10.dp, RoundedCornerShape(16.dp), spotColor = Palette.softPrimary.copy(alpha = 0.5f))
                                     .background(
                                         brush = Brush.horizontalGradient(
-                                            colors = listOf(SoftPrimary, Color(0xFF6366F1))
+                                            colors = listOf(Palette.softPrimary, Color(0xFF6366F1))
                                         ),
                                         shape = RoundedCornerShape(16.dp)
                                     )
@@ -451,14 +451,14 @@ fun Core(controller: NavHostController) {
                                 .size(canvasContainerSize)
                                 .shadow(16.dp, CircleShape, spotColor = Color.Black.copy(alpha = 0.12f))
                                 .clip(CircleShape)
-                                .background(SoftSurface)
-                                .border(1.5.dp, SoftBorder, CircleShape),
+                                .background(Palette.softSurface)
+                                .border(1.5.dp, Palette.softBorder, CircleShape),
                             contentAlignment = Alignment.Center
                         ) {
                             if (nailsToDraw.size + 8 < realThreadCount && progress != 0f) {
                                 CircularProgressIndicator(
                                     progress = { progress },
-                                    color = SoftPrimary,
+                                    color = Palette.softPrimary,
                                     trackColor = Color(0xFFE2E8F0),
                                     strokeWidth = 3.dp,
                                     modifier = Modifier
@@ -531,7 +531,7 @@ fun Core(controller: NavHostController) {
                                 while (i < nails.size) {
                                     val x = nails[i]
                                     val y = nails[i + 1]
-                                    drawCircle(center = Offset(x, y), color = TextPrimary, radius = 1.2f)
+                                    drawCircle(center = Offset(x, y), color = Palette.textPrimary, radius = 1.2f)
                                     i += 2
                                 }
                             }
@@ -542,8 +542,8 @@ fun Core(controller: NavHostController) {
                                 .fillMaxWidth()
                                 .padding(horizontal = 16.dp),
                             shape = RoundedCornerShape(20.dp),
-                            color = SoftSurface,
-                            border = BorderStroke(1.5.dp, SoftBorder),
+                            color = Palette.softSurface,
+                            border = BorderStroke(1.5.dp, Palette.softBorder),
                             shadowElevation = 6.dp
                         ) {
                             Row(
@@ -556,7 +556,7 @@ fun Core(controller: NavHostController) {
                                 BarIcon(
                                     src = R.drawable.upload,
                                     description = "Upload image",
-                                    color = TextPrimary,
+                                    color = Palette.textPrimary,
                                     onclick = {
                                         pauseCall()
                                         launcher.launch("image/*")
@@ -577,7 +577,7 @@ fun Core(controller: NavHostController) {
                                 BarIcon(
                                     src = R.drawable.replay,
                                     description = "Replay draw",
-                                    color = TextPrimary,
+                                    color = Palette.textPrimary,
                                     onclick = { replay() },
                                     active = !isGenerating,
                                     context = context
@@ -585,7 +585,7 @@ fun Core(controller: NavHostController) {
                                 BarIcon(
                                     src = R.drawable.save,
                                     description = "Export hilorama",
-                                    color = TextPrimary,
+                                    color = Palette.textPrimary,
                                     onclick = { showExportDialog = true },
                                     active = !isGenerating,
                                     context = context
@@ -593,7 +593,7 @@ fun Core(controller: NavHostController) {
                                 BarIcon(
                                     src = R.drawable.share,
                                     description = "Share hilorama",
-                                    color = TextPrimary,
+                                    color = Palette.textPrimary,
                                     onclick = {
                                         makeCapture(
                                             scope = scope,

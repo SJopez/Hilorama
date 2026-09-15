@@ -315,8 +315,8 @@ fun ImageCutter(
                             onclick = { onCancel() },
                             modifier = Modifier.fillMaxWidth(),
                             text = "Cancel",
-                            containerColor = SoftBackground,
-                            contentColor = TextPrimary
+                            containerColor = Palette.softBackground,
+                            contentColor = Palette.textPrimary
                         )
                     }
 

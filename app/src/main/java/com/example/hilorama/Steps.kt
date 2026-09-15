@@ -306,7 +306,7 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                 toDrawBitmap = bitmapToGray(currentBitmap)
                 channels = imageToCMY(currentBitmap, threadCount)
             }
-            if (DefaultStep.id == -1L){
+            if (DefaultStep.threads == 0){
                 val data = loadDefaultStepFromRaw(context)
                 saveState(data)
                 loadState()
@@ -399,7 +399,7 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
             LoadingScreen()
         } else {
             Box(
-                modifier = Modifier.fillMaxSize().background(color = SoftBackground)
+                modifier = Modifier.fillMaxSize().background(color = Palette.softBackground)
             ) {
                 if (needToCut) {
                     bitmap?.let {
@@ -457,12 +457,12 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                                 },
                                 description = "Fade",
                                 icon = R.drawable.fade,
-                                tint = if (fadding) Color.White else SoftPrimary,
+                                tint = if (fadding) Color.White else Palette.softPrimary,
                                 modifier = Modifier.then(
                                     if (fadding) {
-                                        Modifier.background(SoftPrimary, CircleShape)
+                                        Modifier.background(Palette.softPrimary, CircleShape)
                                     } else {
-                                        Modifier.border(2.dp, SoftPrimary, CircleShape)
+                                        Modifier.border(2.dp, Palette.softPrimary, CircleShape)
                                     }
                                 )
                             )
@@ -472,6 +472,7 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                                 onclick = {
                                     if (!lapse) {
                                         lapse = true
+                                        if (id == -1L) id = System.currentTimeMillis()
                                         scope.launch {
                                             saveDataStep(
                                                 toDrawBitmap,
@@ -491,14 +492,14 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                                     }
                                 },
                                 description = "Add to complete later...",
-                                tint = if (saved) Color.White else SoftPrimary,
+                                tint = if (saved) Color.White else Palette.softPrimary,
                                 icon = if (saved) R.drawable.bookmark_check else R.drawable.bookmark,
                                 modifier = Modifier.then(
                                     if (saved) {
-                                        Modifier.background(SoftPrimary, CircleShape)
+                                        Modifier.background(Palette.softPrimary, CircleShape)
                                     }
                                     else {
-                                        Modifier.border(2.dp, SoftPrimary, CircleShape)
+                                        Modifier.border(2.dp, Palette.softPrimary, CircleShape)
                                     }
                                 )
                             )
@@ -647,7 +648,7 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(SoftBackground)
+                            .background(Palette.softBackground)
                             .padding(horizontal = 16.dp)
                             .navigationBarsPadding(),
                         verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -662,8 +663,8 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                                     clip = false
                                 ),
                             shape = RoundedCornerShape(20.dp),
-                            color = SoftSurface,
-                            border = BorderStroke(1.dp, SoftBorder)
+                            color = Palette.softSurface,
+                            border = BorderStroke(1.dp, Palette.softBorder)
                         ) {
                             Box(
                                 modifier = Modifier
@@ -728,8 +729,8 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                     Dialog(onDismissRequest = { }) {
                         Surface(
                             shape = RoundedCornerShape(24.dp),
-                            color = SoftSurface,
-                            border = BorderStroke(1.5.dp, SoftBorder),
+                            color = Palette.softSurface,
+                            border = BorderStroke(1.5.dp, Palette.softBorder),
                             shadowElevation = 16.dp,
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -745,7 +746,7 @@ fun StepsCore(controller: NavHostController, mode: Int = 0) {
                                     fontFamily = Jakarta,
                                     fontSize = 24.sp,
                                     fontWeight = FontWeight.Bold,
-                                    color = TextPrimary
+                                    color = Palette.textPrimary
                                 )
                                 HiloramaControls(
                                     nailCount = nailCount,

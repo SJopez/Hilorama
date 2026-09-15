@@ -16,6 +16,7 @@ import android.provider.MediaStore
 import android.widget.Toast
 import androidx.compose.ui.geometry.Offset
 import androidx.annotation.OptIn
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.remember
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -59,6 +60,85 @@ import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.decodeFromStream
 import java.io.InputStreamReader
 
+val LightSoftPrimary = Color(0xFF6054C9)
+val LightExtraSoftPrimary = Color(0xFF937FDA)
+val LightSoftBackground = Color(0xFFF8F9FA)
+val LightSoftSurface = Color(0xFFFFFFFF)
+val LightTextPrimary = Color(0xFF2D3436)
+val LightTextSecondary = Color(0xFF636E72)
+val LightSoftBorder = Color(0xFFD1D5DB)
+val LightStrongColor = Color.Black
+
+val DarkSoftPrimary = Color(0xFF6054C9)
+val DarkExtraSoftPrimary = Color(0xFFA594F0)
+val DarkSoftBackground = Color(0xFF121418)
+val DarkSoftSurface = Color(0xFF1E2229)
+val DarkTextPrimary = Color(0xFFF1F3F5)
+val DarkTextSecondary = Color(0xFF9CA3AF)
+val DarkSoftBorder = Color(0xFF2D333D)
+val DarkStrongColor = Color.LightGray
+
+data class AppColors(
+    val softPrimary: Color = LightSoftPrimary,
+    val extraSoftPrimary: Color = LightExtraSoftPrimary,
+    val softBackground: Color = LightSoftBackground,
+    val softSurface: Color = LightSoftSurface,
+    val textPrimary: Color = LightTextPrimary,
+    val textSecondary: Color = LightTextSecondary,
+    val softBorder: Color = LightSoftBorder,
+    val strongColor: Color = LightStrongColor
+)
+
+var Palette = AppColors()
+
+class ThemeStorage(private val context: Context) {
+    private val themeFile: File
+        get() = File(context.filesDir, "theme_mode.txt")
+
+    fun isDarkMode(defaultSystem: Boolean): Boolean {
+        return try {
+            if (themeFile.exists()) {
+                themeFile.readText().trim() == "1"
+            } else {
+                defaultSystem
+            }
+        } catch (e: Exception) {
+            defaultSystem
+        }
+    }
+
+    fun saveDarkMode(isDark: Boolean) {
+        try {
+            themeFile.writeText(if (isDark) "1" else "0")
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+    }
+}
+
+fun setAppColors(isDark: Boolean) = if (isDark) {
+    Palette = AppColors(
+        softPrimary = DarkSoftPrimary,
+        extraSoftPrimary = DarkExtraSoftPrimary,
+        softBackground = DarkSoftBackground,
+        softSurface = DarkSoftSurface,
+        textPrimary = DarkTextPrimary,
+        textSecondary = DarkTextSecondary,
+        softBorder = DarkSoftBorder,
+        strongColor = DarkStrongColor
+    )
+} else {
+    Palette = AppColors(
+        softPrimary = LightSoftPrimary,
+        extraSoftPrimary = LightExtraSoftPrimary,
+        softBackground = LightSoftBackground,
+        softSurface = LightSoftSurface,
+        textPrimary = LightTextPrimary,
+        textSecondary = LightTextSecondary,
+        softBorder = LightSoftBorder,
+        strongColor = LightStrongColor
+    )
+}
 interface ThreadAdding {
     fun addThread(nail1: Int, nail2: Int)
 }
@@ -554,9 +634,9 @@ fun NumberCircle(
     number: Int,
     center: Offset,
     radius: Float,
-    circleColor: Color = SoftBackground,
-    textColor: Color = TextPrimary,
-    borderColor: Color = SoftPrimary,
+    circleColor: Color = Palette.softBackground,
+    textColor: Color = Palette.textPrimary,
+    borderColor: Color = Palette.softPrimary,
     canvas: DrawScope,
     drawContext: DrawContext
 ) {

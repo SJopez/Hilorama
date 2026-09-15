@@ -8,6 +8,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.displayCutoutPadding
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -25,7 +26,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
-            Scaffold(modifier = Modifier.fillMaxSize().background(color = TextPrimary).navigationBarsPadding().displayCutoutPadding()) { _ ->
+            Scaffold(modifier = Modifier.fillMaxSize().background(color = if (isSystemInDarkTheme()) Color.Black else Color.White).navigationBarsPadding().displayCutoutPadding()) { _ ->
                 val navController = rememberNavController()
 
                 NavHost(navController = navController, startDestination = Screens.Menu.route) {

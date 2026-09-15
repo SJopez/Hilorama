@@ -106,20 +106,12 @@ val Jakarta = FontFamily(
     Font(R.font.jakarta02, FontWeight.SemiBold),
     Font(R.font.jakarta03, FontWeight.Bold)
 )
-val SoftPrimary = Color(0xFF6054C9)
-val SoftSurface = Color(0xFFFFFFFF)
-
-val ExtraSoftPrimary = Color(0xFF937FDA)
-val SoftBackground = Color(0xFFF8F9FA)
-val TextPrimary = Color(0xFF2D3436)
-val TextSecondary = Color(0xFF636E72)
-val SoftBorder = Color(0xFFD1D5DB)
 
 @Composable
 fun BarIcon(
     src: Int,
     description: String,
-    color: Color = TextPrimary,
+    color: Color = Palette.textPrimary,
     onclick: () -> Unit,
     modifier: Modifier = Modifier,
     size: Dp = 22.dp,
@@ -127,8 +119,8 @@ fun BarIcon(
     active: Boolean,
     context: Context
 ) {
-    val bgColor = if(!active && isHighlighted) Color.LightGray else if (isHighlighted) SoftPrimary else Color(0xFFF1F5F9)
-    val iconColor = if (isHighlighted) Color.White else color
+    val bgColor = if(!active && isHighlighted) Color.Gray else if (isHighlighted) Palette.softPrimary else Palette.softBackground
+    val iconColor = if (isHighlighted) Color.White else Palette.strongColor
 
     Surface(
         onClick = { if (active) onclick() else Toast.makeText(context, "\uD83D\uDD27 Finish the AI generation image to use!", Toast.LENGTH_SHORT).show() },
@@ -155,7 +147,7 @@ fun MainButton(
     text: String,
     icon: Boolean = false,
     iconSrc: Int = 0,
-    containerColor: Color = SoftPrimary,
+    containerColor: Color = Palette.softPrimary,
     contentColor: Color = Color.White
 ) {
     Button(
@@ -201,8 +193,8 @@ fun MySlider(
     action: (Float) -> Unit,
     final: () -> Unit = {},
     active: Boolean = true,
-    thumbColor: Color = SoftPrimary,
-    activeColor: Color = SoftPrimary,
+    thumbColor: Color = Palette.softPrimary,
+    activeColor: Color = Palette.softPrimary,
     inactiveColor: Color = Color(0xFFE2E8F0)
 ) {
     Slider(
@@ -258,9 +250,9 @@ fun HiloramaControls(
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(20.dp),
-        colors = CardDefaults.cardColors(containerColor = SoftSurface),
+        colors = CardDefaults.cardColors(containerColor = Palette.softSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = if(borders) 6.dp else 0.dp),
-        border = BorderStroke(if (borders) 1.5.dp else 0.dp, SoftBorder)
+        border = BorderStroke(if (borders) 1.5.dp else 0.dp, Palette.softBorder)
     ) {
         Column(
             modifier = Modifier.padding(16.dp)
@@ -275,14 +267,14 @@ fun HiloramaControls(
                     fontFamily = Jakarta,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = TextSecondary
+                    color = Palette.textSecondary
                 )
                 Text(
                     text = "$nailCount",
                     fontFamily = Jakarta,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (active) SoftPrimary else Color.LightGray
+                    color = if (active) Palette.softPrimary else Color.LightGray
                 )
             }
             MySlider(
@@ -305,14 +297,14 @@ fun HiloramaControls(
                     fontFamily = Jakarta,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.SemiBold,
-                    color = TextSecondary
+                    color = Palette.textSecondary
                 )
                 Text(
                     text = "$threadCount",
                     fontFamily = Jakarta,
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Bold,
-                    color = if (active) SoftPrimary else Color.LightGray
+                    color = if (active) Palette.softPrimary else Color.LightGray
                 )
             }
             MySlider(
@@ -330,7 +322,7 @@ fun HiloramaControls(
                 fontFamily = Jakarta,
                 fontSize = 13.sp,
                 fontWeight = FontWeight.SemiBold,
-                color = TextSecondary
+                color = Palette.textSecondary
             )
 
             Spacer(Modifier.height(8.dp))
@@ -338,7 +330,7 @@ fun HiloramaControls(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .background(Color(0xFFF1F5F9), RoundedCornerShape(12.dp))
+                    .background(Palette.softBackground, RoundedCornerShape(12.dp))
                     .padding(4.dp),
                 horizontalArrangement = Arrangement.spacedBy(4.dp)
             ) {
@@ -348,7 +340,7 @@ fun HiloramaControls(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(8.dp))
-                            .background(if (isSelected) SoftSurface else Color.Transparent)
+                            .background(if (isSelected) Palette.softSurface else Palette.softBackground)
                             .clickable { if (active) onColorModeChange(index) else Toast.makeText(context, "\uD83D\uDD27 Finish the AI generation image to use!", Toast.LENGTH_SHORT).show() }
                             .padding(vertical = 8.dp),
                         contentAlignment = Alignment.Center
@@ -358,7 +350,7 @@ fun HiloramaControls(
                             fontFamily = Jakarta,
                             fontSize = 13.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.SemiBold,
-                            color = if (isSelected && active) SoftPrimary else TextSecondary
+                            color = if (isSelected && active) Palette.softPrimary else Palette.textSecondary
                         )
                     }
                 }
@@ -416,7 +408,7 @@ fun AiGenerationPlaceholder(
             modifier = Modifier.padding(24.dp)
         ) {
             CircularProgressIndicator(
-                color = SoftPrimary,
+                color = Palette.softPrimary,
                 trackColor = Color.White.copy(alpha = 0.2f),
                 strokeWidth = 4.dp,
                 modifier = Modifier.size(54.dp)
@@ -459,8 +451,8 @@ fun ExportOptionDialog(
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = SoftSurface,
-            border = BorderStroke(1.5.dp, SoftBorder),
+            color = Palette.softSurface,
+            border = BorderStroke(1.5.dp, Palette.softBorder),
             shadowElevation = 16.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -480,14 +472,14 @@ fun ExportOptionDialog(
                         fontFamily = Jakarta,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = Palette.textPrimary
                     )
                     Text(
                         text = "Choose your preferred output format",
                         fontFamily = Jakarta,
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Normal,
-                        color = TextSecondary
+                        color = Palette.textSecondary
                     )
                 }
 
@@ -500,19 +492,19 @@ fun ExportOptionDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(SoftBackground)
+                            .background(Palette.softBackground)
                             .clickable { onExportImage() }
                             .padding(vertical = 16.dp, horizontal = 12.dp)
                     ) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = SoftPrimary.copy(alpha = 0.12f),
+                            color = Palette.softPrimary.copy(alpha = 0.12f),
                             modifier = Modifier.size(48.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.image),
                                 contentDescription = "Export Image",
-                                tint = SoftPrimary,
+                                tint = Palette.softPrimary,
                                 modifier = Modifier
                                     .padding(12.dp)
                                     .size(24.dp)
@@ -524,7 +516,7 @@ fun ExportOptionDialog(
                             fontFamily = Jakarta,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextPrimary
+                            color = Palette.textPrimary
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
@@ -532,7 +524,7 @@ fun ExportOptionDialog(
                             fontFamily = Jakarta,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Normal,
-                            color = TextSecondary
+                            color = Palette.textSecondary
                         )
                     }
 
@@ -541,19 +533,19 @@ fun ExportOptionDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clip(RoundedCornerShape(16.dp))
-                            .background(SoftBackground)
+                            .background(Palette.softBackground)
                             .clickable { onExportVideo() }
                             .padding(vertical = 16.dp, horizontal = 12.dp)
                     ) {
                         Surface(
                             shape = RoundedCornerShape(12.dp),
-                            color = SoftPrimary.copy(alpha = 0.12f),
+                            color = Palette.softPrimary.copy(alpha = 0.12f),
                             modifier = Modifier.size(48.dp)
                         ) {
                             Icon(
                                 painter = painterResource(id = R.drawable.video),
                                 contentDescription = "Export Video",
-                                tint = SoftPrimary,
+                                tint = Palette.softPrimary,
                                 modifier = Modifier
                                     .padding(12.dp)
                                     .size(24.dp)
@@ -565,7 +557,7 @@ fun ExportOptionDialog(
                             fontFamily = Jakarta,
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
-                            color = TextPrimary
+                            color = Palette.textPrimary
                         )
                         Spacer(modifier = Modifier.height(2.dp))
                         Text(
@@ -573,7 +565,7 @@ fun ExportOptionDialog(
                             fontFamily = Jakarta,
                             fontSize = 11.sp,
                             fontWeight = FontWeight.Normal,
-                            color = TextSecondary
+                            color = Palette.textSecondary
                         )
                     }
                 }
@@ -612,8 +604,8 @@ fun ExportProgressDialog(
     Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             shape = RoundedCornerShape(24.dp),
-            color = SoftSurface,
-            border = BorderStroke(1.5.dp, SoftBorder),
+            color = Palette.softSurface,
+            border = BorderStroke(1.5.dp, Palette.softBorder),
             shadowElevation = 16.dp,
             modifier = Modifier
                 .fillMaxWidth()
@@ -634,19 +626,19 @@ fun ExportProgressDialog(
                         fontFamily = Jakarta,
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = Palette.textPrimary
                     )
 
                     Surface(
                         shape = CircleShape,
-                        color = SoftPrimary.copy(alpha = 0.12f)
+                        color = Palette.softPrimary.copy(alpha = 0.12f)
                     ) {
                         Text(
                             text = "${(progress * 100).toInt()}%",
                             fontFamily = Jakarta,
                             fontSize = 13.sp,
                             fontWeight = FontWeight.Bold,
-                            color = SoftPrimary,
+                            color = Palette.softPrimary,
                             modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp)
                         )
                     }
@@ -659,15 +651,15 @@ fun ExportProgressDialog(
                         .fillMaxWidth()
                         .height(8.dp)
                         .clip(RoundedCornerShape(4.dp)),
-                    color = SoftPrimary,
-                    trackColor = SoftBackground,
+                    color = Palette.softPrimary,
+                    trackColor = Palette.softBackground,
                     strokeCap = StrokeCap.Round
                 )
 
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(12.dp),
-                    color = SoftBackground
+                    color = Palette.softBackground
                 ) {
                     AnimatedContent(
                         targetState = phrases[currentPhraseIndex],
@@ -686,7 +678,7 @@ fun ExportProgressDialog(
                             fontFamily = Jakarta,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
-                            color = TextSecondary,
+                            color = Palette.textSecondary,
                             textAlign = TextAlign.Center,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -716,7 +708,7 @@ fun BottomNavigationRow(
                 onClick = onNextClick,
                 shape = RoundedCornerShape(50),
                 colors = ButtonDefaults.buttonColors(
-                    containerColor = SoftPrimary
+                    containerColor = Palette.softPrimary
                 ),
                 contentPadding = PaddingValues(horizontal = 32.dp, vertical = 14.dp)
             ) {
@@ -743,7 +735,7 @@ fun ThreadItem(
     onSelect: (Int) -> Unit,
     background: Color
 ) {
-    val backgroundColor = if (selected) SoftPrimary.copy(alpha = 0.08f) else Color.Transparent
+    val backgroundColor = if (selected) Palette.softPrimary.copy(alpha = 0.08f) else Color.Transparent
     val textColor = if (selected) Color.Black else Color.Gray
 
     Row(
@@ -764,7 +756,7 @@ fun ThreadItem(
                     modifier = Modifier
                         .fillMaxSize()
                         .clip(CircleShape)
-                        .background(SoftPrimary)
+                        .background(Palette.softPrimary)
                 )
             }
         }
@@ -773,7 +765,7 @@ fun ThreadItem(
 
         Text(
             text = "${index + 1}",
-            color = if (selected) TextPrimary else TextSecondary,
+            color = if (selected) Palette.textPrimary else Palette.textSecondary,
             fontSize = 14.sp,
             fontFamily = Jakarta,
             fontWeight = FontWeight.Bold,
@@ -792,7 +784,7 @@ fun ThreadItem(
             )
             Text(
                 text = "${nail1}",
-                color = textColor,
+                color = Palette.textPrimary,
                 fontSize = 14.sp,
                 fontFamily = Jakarta,
                 fontWeight = FontWeight.SemiBold
@@ -822,7 +814,7 @@ fun ThreadItem(
             )
             Text(
                 text = "${nail2}",
-                color = textColor,
+                color = Palette.textPrimary,
                 fontSize = 14.sp,
                 fontFamily = Jakarta,
                 fontWeight = FontWeight.SemiBold
@@ -869,9 +861,9 @@ fun ThreadList(
 @Composable
 fun NailsDiagram(
     modifier: Modifier = Modifier,
-    primaryColor: Color = SoftPrimary,
-    textColor: Color = TextPrimary,
-    accentColor: Color = TextSecondary
+    primaryColor: Color = Palette.softPrimary,
+    textColor: Color = Palette.textPrimary,
+    accentColor: Color = Palette.textSecondary
 ) {
     Canvas(
         modifier = modifier
@@ -885,7 +877,7 @@ fun NailsDiagram(
         val strokeWidth = 2.dp.toPx()
 
         drawCircle(
-            color = SoftBorder,
+            color = Palette.softBorder,
             radius = radius,
             center = centerPoint,
             style = Stroke(width = strokeWidth)
@@ -983,9 +975,9 @@ fun ThreadStepHelpDialog(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(20.dp),
             colors = CardDefaults.cardColors(
-                containerColor = SoftSurface
+                containerColor = Palette.softSurface
             ),
-            border = BorderStroke(1.dp, SoftBorder),
+            border = BorderStroke(1.dp, Palette.softBorder),
             elevation = CardDefaults.cardElevation(
                 defaultElevation = 6.dp
             )
@@ -1004,7 +996,7 @@ fun ThreadStepHelpDialog(
                         modifier = Modifier
                             .size(36.dp)
                             .background(
-                                color = SoftPrimary.copy(alpha = 0.12f),
+                                color = Palette.softPrimary.copy(alpha = 0.12f),
                                 shape = CircleShape
                             ),
                         contentAlignment = Alignment.Center
@@ -1012,7 +1004,7 @@ fun ThreadStepHelpDialog(
                         Icon(
                             painter = painterResource(id = R.drawable.help),
                             contentDescription = null,
-                            tint = SoftPrimary,
+                            tint = Palette.softPrimary,
                             modifier = Modifier.size(20.dp)
                         )
                     }
@@ -1021,7 +1013,7 @@ fun ThreadStepHelpDialog(
                         fontFamily = Jakarta,
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        color = TextPrimary
+                        color = Palette.textPrimary
                     )
                 }
                 NailsDiagram()
@@ -1046,7 +1038,7 @@ fun ThreadStepHelpDialog(
                         onclick = onDismissRequest,
                         modifier = Modifier.fillMaxWidth(0.5f),
                         text = "Got it",
-                        containerColor = SoftPrimary,
+                        containerColor = Palette.softPrimary,
                         contentColor = Color.White
                     )
                 }
@@ -1069,7 +1061,7 @@ private fun InstructionStep(
             modifier = Modifier
                 .size(24.dp)
                 .background(
-                    color = SoftPrimary,
+                    color = Palette.softPrimary,
                     shape = CircleShape
                 ),
             contentAlignment = Alignment.Center
@@ -1090,7 +1082,7 @@ private fun InstructionStep(
             fontFamily = Jakarta,
             fontSize = 14.sp,
             fontWeight = FontWeight.Normal,
-            color = TextSecondary,
+            color = Palette.textSecondary,
             lineHeight = 20.sp,
             modifier = Modifier.weight(1f)
         )
@@ -1098,11 +1090,11 @@ private fun InstructionStep(
 }
 
 @Composable
-fun CircularButton(onclick: () -> Unit, description: String, icon: Int, tint: Color = SoftPrimary, modifier: Modifier = Modifier){
+fun CircularButton(onclick: () -> Unit, description: String, icon: Int, tint: Color = Palette.softPrimary, modifier: Modifier = Modifier){
     Box(
         modifier = modifier
             .clip(CircleShape)
-            .border(2.dp, SoftPrimary, CircleShape)
+            .border(2.dp, Palette.softPrimary, CircleShape)
             .clickable {
                 onclick()
             }
@@ -1124,8 +1116,8 @@ fun ToolBar(row: @Composable () -> Unit){
             .fillMaxWidth()
             .padding(horizontal = 16.dp),
         shape = RoundedCornerShape(20.dp),
-        color = SoftSurface,
-        border = BorderStroke(1.5.dp, SoftBorder),
+        color = Palette.softSurface,
+        border = BorderStroke(1.5.dp, Palette.softBorder),
         shadowElevation = 6.dp
     ) {
         row()
