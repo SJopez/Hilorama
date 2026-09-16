@@ -90,9 +90,9 @@ The number of threads directly affects the amount of detail and the complexity o
 <p align="center">
   <table>
     <tr>
-      <td align="center"><img src="readme/thread0.jpg" alt="Hilorama with 3000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>3000 threads</strong></td>
-      <td align="center"><img src="readme/thread1.jpg" alt="Hilorama with 6000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>6000 threads</strong></td>
-      <td align="center"><img src="readme/thread2.jpg" alt="Hilorama with 9000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>9000 threads</strong></td>
+      <td align="center"><img src="readme/thread0.png" alt="Hilorama with 3000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>3000 threads</strong></td>
+      <td align="center"><img src="readme/thread1.png" alt="Hilorama with 6000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>6000 threads</strong></td>
+      <td align="center"><img src="readme/thread2.png" alt="Hilorama with 9000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>9000 threads</strong></td>
     </tr>
   </table>
 </p>
@@ -106,9 +106,9 @@ Unlike threads, the maximum number of nails will produce a more detailed image, 
 <p align="center">
   <table>
     <tr>
-      <td align="center"><img src="readme/nails2.jpg" alt="Hilorama with 360 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>360 nails</strong></td>
-      <td align="center"><img src="readme/nails1.jpg" alt="Hilorama with 180 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>180 nails</strong></td>
-      <td align="center"><img src="readme/nails0.jpg" alt="Hilorama with 150 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>150 nails</strong></td>
+      <td align="center"><img src="readme/nails2.png" alt="Hilorama with 360 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>360 nails</strong></td>
+      <td align="center"><img src="readme/nails1.png" alt="Hilorama with 180 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>180 nails</strong></td>
+      <td align="center"><img src="readme/nails0.png" alt="Hilorama with 150 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>150 nails</strong></td>
     </tr>
   </table>
 </p>
@@ -122,8 +122,8 @@ The app can generate a source image through a request to Pollinations AI using a
 <p align="center">
   <table>
     <tr>
-      <td align="center"><img src="readme/ai1.jpg" alt="AI-generated source image example 1" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>AI example 1</strong></td>
-      <td align="center"><img src="readme/ai2.jpg" alt="AI-generated source image example 2" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>AI example 2</strong></td>
+      <td align="center"><img src="readme/ai1.png" alt="AI-generated source image example 1" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>AI example 1</strong></td>
+      <td align="center"><img src="readme/ai2.png" alt="AI-generated source image example 2" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>AI example 2</strong></td>
     </tr>
   </table>
 </p>
@@ -149,8 +149,8 @@ The app includes a fade window that lets the user slide a vertical mask to revea
 <p align="center">
   <table>
     <tr>
-      <td align="center"><img src="readme/fade1.jpg" alt="Lady 1" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>Lady 1</strong></td>
-      <td align="center"><img src="readme/fade2.jpg" alt="Lady 2" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>Lady 2</strong></td>
+      <td align="center"><img src="readme/fade1.png" alt="Lady 1" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>Lady 1</strong></td>
+      <td align="center"><img src="readme/fade2.png" alt="Lady 2" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>Lady 2</strong></td>
     </tr>
   </table>
 </p>
@@ -253,8 +253,8 @@ That is where C++ helps: it keeps the hot loops leaner and gives tighter control
 ## The end
 
 <p align="center">
-      <img src="readme/uh.jpg" alt="University of Havana" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
-      <img src="readme/matcom.jpg" alt="MATCOM" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
+      <img src="readme/uh.png" alt="University of Havana" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
+      <img src="readme/matcom.png" alt="MATCOM" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
 </p>
 
 <p align="center">
