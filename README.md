@@ -201,7 +201,7 @@ possible threads to consider.
 The goal is then to choose the thread that minimizes the residual error:
 
 $$
-\min \|A x - b\|
+\min \|A x - b \|
 $$
 
 This greedy strategy trades perfect optimization for a fast, iterative approximation that is good enough to produce compelling artistic results.
