@@ -6,7 +6,7 @@ Hilorama
 </div>
 
 <p align="center">
-  <video src="readme/video_2026-09-15_21-46-05.mp4" autoplay loop muted playsinline width="360" style="border-radius: 50%; overflow: hidden; display: block; margin: 0 auto 16px; object-fit: cover; aspect-ratio: 1 / 1; background: #111827; box-shadow: 0 10px 30px rgba(0,0,0,0.25);"></video>
+  <img src="readme/video.gif" alt="Hilorama animation preview" width="360" style="border-radius: 50%; overflow: hidden; display: block; margin: 0 auto 16px; object-fit: cover; aspect-ratio: 1 / 1; background: #111827; box-shadow: 0 10px 30px rgba(0,0,0,0.25);" />
 </p>
 
 <p align="center">
