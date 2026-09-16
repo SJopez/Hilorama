@@ -6,7 +6,7 @@ Hilorama
 </div>
 
 <p align="center">
-  <img src="readme/video.gif" alt="Hilorama animation preview" width="360" style="border-radius: 50%; overflow: hidden; display: block; margin: 0 auto 16px; object-fit: cover; aspect-ratio: 1 / 1; background: #111827; box-shadow: 0 10px 30px rgba(0,0,0,0.25);" />
+  <img src="readme/hilorama.gif" alt="Hilorama animation preview" width="360" />
 </p>
 
 <p align="center">
@@ -253,12 +253,8 @@ That is where C++ helps: it keeps the hot loops leaner and gives tighter control
 ## The end
 
 <p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="readme/uh.jpg" alt="University of Havana" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" /></td>
-      <td align="center"><img src="readme/matcom.jpg" alt="MATCOM" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" /></td>
-    </tr>
-  </table>
+      <img src="readme/uh.jpg" alt="University of Havana" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
+      <img src="readme/matcom.jpg" alt="MATCOM" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
 </p>
 
 <p align="center">
