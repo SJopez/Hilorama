@@ -1,10 +1,4 @@
-<div>
-<h1>
-<img src="readme/ic_launcher-playstore.png" alt="Hilorama app icon" width="38" height="38" style="border-radius: 12px; vertical-align: text-bottom; display: inline-block; margin-bottom: 0; transform: translateY(-2px);" />
-Hilorama
-</h1>
-</div>
-
+# <img src="readme/ic_launcher-playstore.png" alt="Hilorama app icon" width="38" height="38" style="border-radius: 12px; vertical-align: text-bottom; display: inline-block; margin-bottom: 0; transform: translateY(-2px);" /> Hilorama
 <p align="center">
   <img src="readme/hilorama.gif" alt="Hilorama animation preview" width="360" />
 </p>
@@ -38,12 +32,8 @@ Hilorama is a high-performance String Art generator for Android, combining a nat
 From the UI design there is not much to say: the app has light and dark themes according to your preference.
 
 <p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="readme/light.jpg" alt="Light theme preview" width="260" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" /><br /><strong>Light</strong></td>
-      <td align="center"><img src="readme/dark.jpg" alt="Dark theme preview" width="260" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" /><br /><strong>Dark</strong></td>
-    </tr>
-  </table>
+  <img src="readme/light.jpg" alt="Light theme preview" width="260" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18); margin: 0 12px;" />
+  <img src="readme/dark.jpg" alt="Dark theme preview" width="260" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18); margin: 0 12px;" />
 </p>
 
 If you are worried about those beautiful purple lines disappearing, don't be. It is just an animation, and it will come back :p
@@ -88,30 +78,26 @@ Parameters are the main controls that shape the final composition in Hilorama. T
 The number of threads directly affects the amount of detail and the complexity of the generated drawing. More threads usually create a richer approximation, but the computational cost also increases.
 
 <p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="readme/thread0.png" alt="Hilorama with 3000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>3000 threads</strong></td>
-      <td align="center"><img src="readme/thread1.png" alt="Hilorama with 6000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>6000 threads</strong></td>
-      <td align="center"><img src="readme/thread2.png" alt="Hilorama with 9000 threads" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>9000 threads</strong></td>
-    </tr>
-  </table>
+  <img src="readme/thread0.png" alt="Hilorama with 3000 threads" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/thread1.png" alt="Hilorama with 6000 threads" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/thread2.png" alt="Hilorama with 9000 threads" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
 </p>
 
-As you can see here, the right choice is 6000 threads. However, you may choose up to 12000, but in most cases this quantity will be too much. Of course, it depends on the image.
+These images show how the result looks with 3000, 6000, and 9000 threads respectively. In this case, 6000 threads is the right choice. However, you may choose up to 12000, but in most cases this quantity will be too much. Of course, it depends on the image.
+
+For Gray and Mono modes, the required thread count is usually lower, roughly about half of the value needed for the more colorful modes.
 
 #### Nails
 
 Unlike threads, the maximum number of nails will produce a more detailed image, but like threads, more nails increase significantly the time complexity. However, the recommended approach is to leave the nails at 360 and vary the threads parameter instead. Here you can see an example with a picture of the great Robe Iniesta ❤
 
 <p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="readme/nails2.png" alt="Hilorama with 360 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>360 nails</strong></td>
-      <td align="center"><img src="readme/nails1.png" alt="Hilorama with 180 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>180 nails</strong></td>
-      <td align="center"><img src="readme/nails0.png" alt="Hilorama with 150 nails" width="220" style="border-radius: 50%; object-fit: cover;" /><br /><strong>150 nails</strong></td>
-    </tr>
-  </table>
+  <img src="readme/nails2.png" alt="Hilorama with 360 nails" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/nails1.png" alt="Hilorama with 180 nails" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/nails0.png" alt="Hilorama with 150 nails" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
 </p>
+
+These images show how the result looks with 360, 180, and 150 nails respectively. This gives a direct sense of how the nail density changes the final composition.
 
 ## Features
 
@@ -120,12 +106,8 @@ Unlike threads, the maximum number of nails will produce a more detailed image, 
 The app can generate a source image through a request to Pollinations AI using a prompt defined by the user. Once the image is ready, it is passed into the app's string-art generation pipeline, where the algorithm transforms it into a customized Hilorama composition.
 
 <p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="readme/ai1.png" alt="AI-generated source image example 1" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>AI example 1</strong></td>
-      <td align="center"><img src="readme/ai2.png" alt="AI-generated source image example 2" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>AI example 2</strong></td>
-    </tr>
-  </table>
+  <img src="readme/ai1.png" alt="AI-generated source image example 1" width="260" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/ai2.png" alt="AI-generated source image example 2" width="260" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
 </p>
 
 > Warning: this is a free AI model, so it can make mistakes. The best results usually come from simple, generic prompts that the model can interpret easily without strain.
@@ -147,12 +129,8 @@ The app gives you two ways to preserve the final result: export a still image or
 The app includes a fade window that lets the user slide a vertical mask to reveal part of the original image while the Hilorama generation continues underneath. This creates a direct, one-to-one comparison between the algorithmic output and the original reference, making it easy to evaluate how faithfully the composition follows the source.
 
 <p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="readme/fade1.png" alt="Lady 1" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>Lady 1</strong></td>
-      <td align="center"><img src="readme/fade2.png" alt="Lady 2" width="260" style="border-radius: 50%; object-fit: cover;" /><br /><strong>Lady 2</strong></td>
-    </tr>
-  </table>
+  <img src="readme/fade1.png" alt="Lady 1" width="260" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/fade2.png" alt="Lady 2" width="260" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
 </p>
 
 Here is an example of the feature with images of two beautiful young women from different time ;)
@@ -176,12 +154,8 @@ This mode helps you understand how the drawing is constructed step by step, maki
 Easy to understand, right? Well, if you ever get lost, you can consult the instructions by pressing the third button in the top bar.
 
 <p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="readme/step1.jpg" alt="Step by step reference image 1" width="220" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" /></td>
-      <td align="center"><img src="readme/step2.jpg" alt="Step by step reference image 2" width="220" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" /></td>
-    </tr>
-  </table>
+  <img src="readme/step1.jpg" alt="Step by step reference image 1" width="220" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18); margin: 0 12px;" />
+  <img src="readme/step2.jpg" alt="Step by step reference image 2" width="220" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18); margin: 0 12px;" />
 </p>
 
 The two circles with their corresponding numbers represent the two nails that hold the thread to be drawn. Each number identifies a nail index, and the thread is the connection between those two nails. On the right-side list, you can review the sequence more clearly and even go back to any previous thread whenever needed.
