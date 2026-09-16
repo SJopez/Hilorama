@@ -1,4 +1,4 @@
-# <img src="readme/ic_launcher-playstore.png" alt="Hilorama app icon" width="38" height="38" style="border-radius: 12px; vertical-align: text-bottom; display: inline-block; margin-bottom: 0; transform: translateY(-2px);" /> Hilorama
+# <img src="readme/ic_launcher-playstore.png" alt="Hilorama app icon" width="38" height="38" /> Hilorama
 <p align="center">
   <img src="readme/hilorama.gif" alt="Hilorama animation preview" width="360" />
 </p>
@@ -32,8 +32,8 @@ Hilorama is a high-performance String Art generator for Android, combining a nat
 From the UI design there is not much to say: the app has light and dark themes according to your preference.
 
 <p align="center">
-  <img src="readme/light.jpg" alt="Light theme preview" width="260" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18); margin: 0 12px;" />
-  <img src="readme/dark.jpg" alt="Dark theme preview" width="260" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18); margin: 0 12px;" />
+  <img src="readme/light.png" alt="Light theme preview" width="260" />
+  <img src="readme/dark.png" alt="Dark theme preview" width="260" />
 </p>
 
 If you are worried about those beautiful purple lines disappearing, don't be. It is just an animation, and it will come back :p
@@ -47,20 +47,16 @@ Unlike most String Art apps that generate monochrome compositions, Hilorama can 
 <p align="center">
   <table>
     <tr>
-      <td><img src="readme/Gray.jpg" alt="Gray mode example" width="220" style="border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;" /></td>
-      <td><strong>Gray</strong><br />Uses black and white only. The best choice for a black-and-white style and excellent for preserving fine details.</td>
+      <td align="center"><img src="readme/Gray.png" alt="Gray mode example" width="220" /><br /><strong>Gray</strong><br />Uses black and white only. The best choice for a black-and-white style and excellent for preserving fine details.</td>
     </tr>
     <tr>
-      <td><img src="readme/Mono.jpg" alt="Mono mode example" width="220" style="border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;" /></td>
-      <td><strong>Mono</strong><br />Uses white and black in the inverse configuration. It produces an image with strong brightness and works very well for images with light backgrounds.</td>
+      <td align="center"><img src="readme/Mono.png" alt="Mono mode example" width="220" /><br /><strong>Mono</strong><br />Uses white and black in the inverse configuration. It produces an image with strong brightness and works very well for images with light backgrounds.</td>
     </tr>
     <tr>
-      <td><img src="readme/RGB.jpg" alt="RGB mode example" width="220" style="border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;" /></td>
-      <td><strong>RGB</strong><br />Uses Red, Green, and Blue channels, which combine to produce the full range of tones. Like Gray, it produces images with high brightness, and the recommended use case is essentially the same.</td>
+      <td align="center"><img src="readme/RGB.png" alt="RGB mode example" width="220" /><br /><strong>RGB</strong><br />Uses Red, Green, and Blue channels, which combine to produce the full range of tones. Like Gray, it produces images with high brightness, and the recommended use case is essentially the same.</td>
     </tr>
     <tr>
-      <td><img src="readme/CMY.jpg" alt="CMY mode example" width="220" style="border-radius: 50%; object-fit: cover; border: 2px solid #e5e7eb;" /></td>
-      <td><strong>CMY</strong><br />Uses Cyan, Magenta, and Yellow channels. This is the subtractive RGB mode, and it is often the mode you will want to use most of the time because it produces very good results in many cases.</td>
+      <td align="center"><img src="readme/CMY.png" alt="CMY mode example" width="220" /><br /><strong>CMY</strong><br />Uses Cyan, Magenta, and Yellow channels. This is the subtractive RGB mode, and it is often the mode you will want to use most of the time because it produces very good results in many cases.</td>
     </tr>
   </table>
 </p>
@@ -78,9 +74,9 @@ Parameters are the main controls that shape the final composition in Hilorama. T
 The number of threads directly affects the amount of detail and the complexity of the generated drawing. More threads usually create a richer approximation, but the computational cost also increases.
 
 <p align="center">
-  <img src="readme/thread0.png" alt="Hilorama with 3000 threads" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
-  <img src="readme/thread1.png" alt="Hilorama with 6000 threads" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
-  <img src="readme/thread2.png" alt="Hilorama with 9000 threads" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/thread0.png" alt="Hilorama with 3000 threads" width="220" />
+  <img src="readme/thread1.png" alt="Hilorama with 6000 threads" width="220" />
+  <img src="readme/thread2.png" alt="Hilorama with 9000 threads" width="220" />
 </p>
 
 These images show how the result looks with 3000, 6000, and 9000 threads respectively. In this case, 6000 threads is the right choice. However, you may choose up to 12000, but in most cases this quantity will be too much. Of course, it depends on the image.
@@ -92,9 +88,9 @@ For Gray and Mono modes, the required thread count is usually lower, roughly abo
 Unlike threads, the maximum number of nails will produce a more detailed image, but like threads, more nails increase significantly the time complexity. However, the recommended approach is to leave the nails at 360 and vary the threads parameter instead. Here you can see an example with a picture of the great Robe Iniesta ❤
 
 <p align="center">
-  <img src="readme/nails2.png" alt="Hilorama with 360 nails" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
-  <img src="readme/nails1.png" alt="Hilorama with 180 nails" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
-  <img src="readme/nails0.png" alt="Hilorama with 150 nails" width="220" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/nails2.png" alt="Hilorama with 360 nails" width="220" />
+  <img src="readme/nails1.png" alt="Hilorama with 180 nails" width="220" />
+  <img src="readme/nails0.png" alt="Hilorama with 150 nails" width="220" />
 </p>
 
 These images show how the result looks with 360, 180, and 150 nails respectively. This gives a direct sense of how the nail density changes the final composition.
@@ -106,8 +102,8 @@ These images show how the result looks with 360, 180, and 150 nails respectively
 The app can generate a source image through a request to Pollinations AI using a prompt defined by the user. Once the image is ready, it is passed into the app's string-art generation pipeline, where the algorithm transforms it into a customized Hilorama composition.
 
 <p align="center">
-  <img src="readme/ai1.png" alt="AI-generated source image example 1" width="260" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
-  <img src="readme/ai2.png" alt="AI-generated source image example 2" width="260" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/ai1.png" alt="AI-generated source image example 1" width="260" />
+  <img src="readme/ai2.png" alt="AI-generated source image example 2" width="260" />
 </p>
 
 > Warning: this is a free AI model, so it can make mistakes. The best results usually come from simple, generic prompts that the model can interpret easily without strain.
@@ -129,8 +125,8 @@ The app gives you two ways to preserve the final result: export a still image or
 The app includes a fade window that lets the user slide a vertical mask to reveal part of the original image while the Hilorama generation continues underneath. This creates a direct, one-to-one comparison between the algorithmic output and the original reference, making it easy to evaluate how faithfully the composition follows the source.
 
 <p align="center">
-  <img src="readme/fade1.png" alt="Lady 1" width="260" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
-  <img src="readme/fade2.png" alt="Lady 2" width="260" style="border-radius: 50%; object-fit: cover; margin: 0 12px;" />
+  <img src="readme/fade1.png" alt="Lady 1" width="260" />
+  <img src="readme/fade2.png" alt="Lady 2" width="260" />
 </p>
 
 Here is an example of the feature with images of two beautiful young women from different time ;)
@@ -140,22 +136,16 @@ Here is an example of the feature with images of two beautiful young women from 
 This mode helps you understand how the drawing is constructed step by step, making the process easier to follow and more intuitive to learn.
 
 <p align="center">
-  <table>
-    <tr>
-      <td align="center"><img src="readme/degree.jpg" alt="Degree numbering diagram" width="300" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" /></td>
-      <td valign="middle" style="padding-left: 18px; text-align: left;">
-        Each nail is numbered around the circle in order, starting from 0 and continuing clockwise. The numbers are the nail indices, and every thread is defined by the connection between two of these indices.
-        <br /><br />
-      </td>
-    </tr>
-  </table>
+  <img src="readme/degree.jpg" alt="Degree numbering diagram" width="300" />
 </p>
+
+Each nail is numbered around the circle in order, starting from 0 and continuing clockwise. The numbers are the nail indices, and every thread is defined by the connection between two of these indices.
 
 Easy to understand, right? Well, if you ever get lost, you can consult the instructions by pressing the third button in the top bar.
 
 <p align="center">
-  <img src="readme/step1.jpg" alt="Step by step reference image 1" width="220" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18); margin: 0 12px;" />
-  <img src="readme/step2.jpg" alt="Step by step reference image 2" width="220" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18); margin: 0 12px;" />
+  <img src="readme/step1.jpg" alt="Step by step reference image 1" width="220" />
+  <img src="readme/step2.jpg" alt="Step by step reference image 2" width="220" />
 </p>
 
 The two circles with their corresponding numbers represent the two nails that hold the thread to be drawn. Each number identifies a nail index, and the thread is the connection between those two nails. On the right-side list, you can review the sequence more clearly and even go back to any previous thread whenever needed.
@@ -167,7 +157,7 @@ But what if you need to close the app in the middle of a step-by-step Hilorama c
 In the step-by-step menu, using the second button in the top bar, the bookmark icon, the current work is saved even if the app is closed. This makes it easy to pause the process without losing the progress already made.
 
 <p align="center">
-  <img src="readme/bookmark.jpg" alt="Bookmark menu" width="260" style="border-radius: 24px; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
+  <img src="readme/bookmark.jpg" alt="Bookmark menu" width="260" />
 </p>
 
 From this menu, you can load each saved work and continue exactly from the point where you left it. The app keeps the progress of the current Hilorama so you can resume the process naturally and continue drawing from the same thread sequence.
@@ -227,8 +217,8 @@ That is where C++ helps: it keeps the hot loops leaner and gives tighter control
 ## The end
 
 <p align="center">
-      <img src="readme/uh.png" alt="University of Havana" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
-      <img src="readme/matcom.png" alt="MATCOM" width="220" style="border-radius: 50%; object-fit: cover; box-shadow: 0 10px 20px rgba(0,0,0,0.18);" />
+      <img src="readme/uh.png" alt="University of Havana" width="220" />
+      <img src="readme/matcom.png" alt="MATCOM" width="220" />
 </p>
 
 <p align="center">
