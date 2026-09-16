@@ -17,9 +17,7 @@ android {
                 arguments += "-DANDROID_STL=c++_shared"
             }
         }
-        ndk {
-            abiFilters += listOf("armeabi-v7a")
-        }
+
         applicationId = "com.example.hilorama"
         minSdk = 24
         targetSdk = 37
@@ -27,6 +25,14 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+    splits {
+        abi {
+            isEnable = true
+            reset()
+            include("arm64-v8a", "armeabi-v7a")
+            isUniversalApk = true
+        }
     }
     externalNativeBuild {
         cmake {

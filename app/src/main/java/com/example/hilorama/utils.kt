@@ -262,8 +262,8 @@ fun cropBitmap(original: Bitmap, width: Int,height: Int, noCut: Boolean = false)
         height / image.height.toFloat()
     )
 
-    val scaledWidth = (image.width * scale).toInt()
-    val scaledHeight = (image.height * scale).toInt()
+    val scaledWidth = (image.width * scale).toInt().coerceAtLeast(width)
+    val scaledHeight = (image.height * scale).toInt().coerceAtLeast(height)
     val scaledBitmap = original.scale(scaledWidth, scaledHeight)
 
     if (noCut) return scaledBitmap

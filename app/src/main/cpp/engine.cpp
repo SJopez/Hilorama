@@ -83,7 +83,6 @@ void HiloramaMain::drawImage(int channel, int count, float *image, vector<pair<i
     for (int currLines = currLineSave[channel]; currLines < count; currLines++){
         if (stop.load()) {
             if (generation.load() == currGen){
-                LOG("%s", "PAUSADO");
                 saveStatus(channel, currNail, prevNail, currLines);
             }
             return;

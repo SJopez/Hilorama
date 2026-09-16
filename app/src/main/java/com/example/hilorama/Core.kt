@@ -189,12 +189,20 @@ fun Core(controller: NavHostController) {
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
-        bitmap = uri?.let {
-            context.contentResolver.openInputStream(it)?.use { stream ->
-                BitmapFactory.decodeStream(stream)
-            }
-        } ?: croppedBitmap
-        if (uri != null) needToCut = true
+        val newBitmap = uri?.let { selectedUri ->
+            runCatching {
+                context.contentResolver.openInputStream(selectedUri)?.use { stream ->
+                    BitmapFactory.decodeStream(stream)
+                }
+            }.getOrNull()
+        }
+
+        if (newBitmap != null) {
+            bitmap = newBitmap
+            needToCut = true
+        } else if (uri != null) {
+            Toast.makeText(context, " ❌ Loading Error", Toast.LENGTH_SHORT).show()
+        }
     }
 
     LaunchedEffect(Unit) {

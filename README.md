@@ -19,6 +19,7 @@ Hilorama is a high-performance String Art generator for Android, combining a nat
 
 ## Table of Contents
 
+- [Download](#download)
 - [Themes and design](#themes-and-design)
 - [Drawing](#drawing)
 - [Features](#features)
@@ -26,6 +27,19 @@ Hilorama is a high-performance String Art generator for Android, combining a nat
 - [Bookmark](#bookmark)
 - [Performance](#performance)
 - [The end](#the-end)
+
+## Download
+
+You can download the APK here:
+
+- [Hilorama v1.0 APK](https://github.com/SJopez/Hilorama/releases/download/v1.0/app-universal-release.apk)
+
+### User permissions
+
+The app requests two permissions:
+
+- Internet access: this is used for the AI image generation feature, which is described in [AI Image](#ai-image). The app can still work completely offline without this permission, and the core String Art generation does not require internet access.
+- Storage access: this is used to save generated images and videos, as described in [Save as image and video](#save-as-image-and-video). The app needs this permission to write exported artwork to the device gallery or dedicated Hilorama folder.
 
 ## Themes and design
 
